@@ -1,0 +1,12 @@
+<p:declare-step xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:p="http://www.w3.org/ns/xproc" version="1.0" xproc:type="comp-step"><p:input port="source" xproc:type="comp"><p:inline xproc:type="comp"><doc>
+Congratulations! You've run your first pipeline!
+</doc></p:inline></p:input><p:output port="result"
+xproc:type="comp"></p:output><p:group xproc:step="true"
+xproc:type="comp-step"><p:identity xproc:step="true"
+xproc:type="std-step"></p:identity></p:group><p:identity
+xproc:step="true" xproc:type="std-step"><p:input port="source"
+select="/test" xproc:type="comp"><p:inline
+xproc:type="comp"><test>test</test></p:inline></p:input></p:identity><p:count
+limit="20" xproc:step="true" xproc:type="std-step"><p:with-option
+xproc:type="comp" name="limit"
+select="20"></p:with-option></p:count></p:declare-step>

@@ -1,0 +1,24 @@
+<p:declare-step version="1.0" xmlns:p="http://www.w3.org/ns/xproc" name="main">
+<p:input port="source" sequence="true">
+<p:inline>
+<doc>
+<para>Some paragraph.</para>
+<para>Some paragraph.</para>
+<para>Some paragraph.</para>
+<para>
+<para>Nested paragraph.</para>
+</para>
+</doc>
+</p:inline>
+</p:input>
+<p:output port="result" sequence="true" />
+
+<p:viewport match="para" name="step1">
+<p:identity name="step2">
+<p:input port="source">
+<p:inline><foo/></p:inline>
+</p:input>
+</p:identity>
+</p:viewport>
+
+</p:declare-step>

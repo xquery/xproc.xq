@@ -1,0 +1,338 @@
+* current
+*** p:http
+*** check p:with-option is encapsulating select string value correctly
+*** check xpath-context,viewport-source, iteration-source
+*** implement p:outputs
+
+*** impl optional steps
+    p:exec - anywhere in eXist a util:exec function (require java binding to be enabled )
+    p:hash - problem with XSLTMATCHPATTERN with handling attributes
+    p:www-form-urldecode - easy
+    p:www-form-urlencode - easy
+
+*** implement xproc xpath functions
+    string/boolean p:system-property(string property)
+    boolean p:step-available(string step-type)
+    integer p:iteration-position()
+    integer p:iteration-size()
+    string p:base-uri()
+    string p:base-uri(Node node)
+    string p:resolve-uri(String relative)
+    string p:resolve-uri(String relative, String base)
+
+*** implement params & options
+*** serialization
+*** error assertions
+*** p:library
+*** parameters
+*** review p:declare-step
+* 
+* links
+*** spec: http://www.w3.org/TR/xproc/
+*** old xprocxq docs: http://exist.sourceforge.net/xproc/xproc.html
+*** tests.xproc.org: http://tests.xproc.org/ 
+* plan
+*** implement all std, xproc, ext, opt steps
+*** DONE hookup w3c test suite
+*** library
+* tasks
+*** DONE setup test system
+    CLOSED: [2011-06-07 Tue 11:26]
+    - CLOSING NOTE [2011-06-07 Tue 11:26]
+***** testrunner for tests.xproc.org
+******* be able to run a single test
+***** testrunner for xprocxq specific tests
+******* be able to run a single test
+***** xml calabash ?
+******* compare output
+*** setup build system ?
+* methodology
+*** write test
+*** test error codes
+*** spec error codes
+*** app error codes
+* architecture
+*** parser: create AST, name everything, make everything explicit and runnable
+***** parse-time
+******* sort pipeline
+******* create ext:post
+******* explicit port bindings
+***** run-time: explicit bindings throws err:XS0044
+******* resolve step bindings (p:empty,p:document, p:inline, p:data, lookup pipe
+******* generate component throws xxq-error:XXQ0002
+*** evaluator
+***** step-fold is core processor
+******* references to pipeline
+******* references to AST
+******* references to inscope namespaces
+******* eval-step function
+******* resolve external $primary input and bindings
+******* resolve $output bindings
+*** serializer
+*** constants
+*** namespace fixup
+*** steps
+***** std.xqm: required steps as defined by spec 
+***** opt.xqm: optional steps as defined by spec
+***** ext.xqm: extension steps specific to xprocxq
+*** deps
+***** saxon initially to use first class functions
+
+* notes
+*** try to keep all processor specific functionality within util.xqm
+*** build system should create vendor specific
+***** saxon
+***** marklogic
+***** 28msec
+***** basex
+***** eXist
+
+* testcases 
+
+----------------------------------------------------------------------------------------------
+convert to testcases
+-------------------------------------------------------------------------------------------
+
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+
+    <p:count/>    
+    <p:identity/>
+    
+</p:pipeline>
+
+
+----------------------------------------------------------------------------------------------
+
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<input port="source"/>
+
+    <p:count/>    
+    <p:identity/>
+    
+</p:pipeline>
+
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+    <p:input port="source" primary="true"/>  
+    <p:output port="result" primary="true"/>
+    
+    <p:identity name="step1"/>
+    
+    <p:count name="step2"/>
+    
+</p:pipeline>
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+    <p:input port="source"/>  
+    <p:output port="result"/>
+    
+    <p:identity name="step1"/>
+    
+    <p:count name="step2"/>
+    
+</p:pipeline>
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+    <p:input port="source"/>  
+    <p:output port="result"/>
+
+    <p:count name="step2">    
+		<p:input name="source">
+	       <p:pipe step="step1" port="source"/>
+		</p:input>
+	</p:count>
+	
+    <p:identity name="step1"/>
+    
+</p:pipeline>
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+<p:input port="source" primary="true"/>  
+<p:output port="result" primary="true"/>
+
+<p:count name="step2">    
+	<p:input name="source">
+       <p:pipe step="step1" port="source"/>
+	</p:input>
+</p:count>
+    <p:identity name="step1"/>
+    
+</p:pipeline>
+
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+    <p:input port="src">
+        <p:inline>
+            <test/>
+        </p:inline>
+    </p:input>
+    
+    <p:output port="result"/>
+    
+    <p:identity>
+		<p:input name="source">
+		       <p:pipe step="pipeline" port="src"/>
+		</p:input>
+	<p:/identity>
+    
+    <p:count/>
+    
+</p:pipeline>
+
+-----------------------------------------------------------------------------------------------
+
+<p:pipeline name="pipeline"
+            xmlns:p="http://www.w3.org/ns/xproc"
+            xmlns:c="http://www.w3.org/ns/xproc-step"
+            xmlns:err="http://www.w3.org/ns/xproc-error">
+    
+    <p:input port="source" primary="true">
+        <p:doc href="file://test.xml"/>
+    </p:input>
+    
+    <p:output port="result" primary="true"/>
+    
+    <p:identity>
+		<p:input name="source" primary="true">
+		       <p:pipe step="pipeline" port="source"/>
+		</p:input>
+	<p:/identity>
+    
+    <p:wrap/>
+    
+</p:pipeline>
+
+
+
+* sequence issue with input to choose
+* fix p:choose deal with xpath-context, each subpipeline must have the same output signature (static check)
+* target main eXist scenarios
+	- form handler
+	- the same applies to all apps where a user needs to log in first
+	- how about a simple wizard-style example, e.g. along the lines of the "number guessing" example in eXist. I think the page flow logic could all be done in xproc.
+
+------------------------------
+complex/container steps
+------------------------------
+	p:viewport - treewalker and then apply ext:eval-step to node
+
+------------------------------
+standard steps
+------------------------------
+	p:add-xml-base
+	p:make-absolute-uris
+	p:namespace-rename
+	p:parameters
+
+------------------------------
+optional steps
+------------------------------
+
+------------------------------
+extension functions
+------------------------------
+
+------------------------------
+components
+------------------------------
+	p:serialisation
+	p:log
+	p:pipeinfo
+
+------------------------------
+other
+------------------------------
+    provide validation switch to xproc:run func signature and use annotated relaxNG schema
+to validate against
+
+----------------------------------------
+spec reminders
+----------------------------------------
+
+parameters are like options, names until runtime (good to use with p:xslt).
+Variables are created in compound steps and are immutable
+Options can be declared on atomic or compound steps.
+Parameters, unlike options and variables, have names that can be computed at runtime.
+
+
+
+----------------------------------------------------------------------
+27/12/10
+----------------------------------------------------------------------
+
+prob with validxsd-006
+prob with rename-004
+prob with add-xml-base
+prob with Test delete-002
+
+64 normal pass
+273 normal fail
+
+337 total normal required tests
+
+8 normal pass
+250 normal fail
+258 total normal err required tests
+
+12% pass rate
+
+----------------------------------------------------------------------
+31/12/10 TESTS
+----------------------------------------------------------------------
+-----------------------------
+required (338)
+-----------------------------
+* pass  83
+* fail  255
+required - err (258)
+* pass  8
+* fail  250
+
+-----------------------------
+optional required ()
+-----------------------------
+* pass
+* fail
+optional - err ()
+* pass
+* fail
+-----------------------------

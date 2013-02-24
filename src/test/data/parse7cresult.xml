@@ -1,0 +1,111 @@
+<p:declare-step xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:p="http://www.w3.org/ns/xproc" exclude-inline-prefixes="c cx" name="main" version="1.0" xproc:type="comp-step">
+<p:output port="result" xproc:type="comp"></p:output>
+<p:option name="host" select="'tests.xproc.org'" xproc:type="comp"></p:option>
+<p:option name="username" select="'calabash'" xproc:type="comp"></p:option>
+<p:option name="password" select="''" xproc:type="comp"></p:option>
+
+<p:documentation xproc:type="comp">
+<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cx="http://xmlcalabash.com/ns/extensions">
+  <p>This pipeline runs the XProc test suite and reports the results.</p>
+  <p>It has three options: <code>host</code>, <code>username</code>, and
+  <code>password</code>.</p>
+  <p>The <code>host</code> option is used to specify the host to use
+  in the URIs of test suite documents. (Because Norm has a local copy of
+  <a href="http://tests.xproc.org/">http://tests.xproc.org/</a>.)</p>
+  <p>The <code>username</code> and <code>password</code> are used to submit
+  the test results to <a href="http://tests.xproc.org/">http://tests.xproc.org</a>.
+  If run without a password, it simply outputs the report document.</p>
+</div>
+</p:documentation>
+
+<p:string-replace match="uri/text()" name="patch-test-uris" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="match" select="uri/text()"></p:with-option>
+  <p:input port="source" xproc:type="comp">
+    <p:inline xproc:type="comp">
+      <test-suites xmlns:cx="http://xmlcalabash.com/ns/extensions">
+	<uri>/tests/required/test-suite.xml</uri>
+	<uri>/tests/serialization/test-suite.xml</uri>
+	<uri>/tests/optional/test-suite.xml</uri>
+	<uri>/tests/extension/test-suite.xml</uri>
+      </test-suites>
+    </p:inline>
+  </p:input>
+  <p:with-option name="replace" select="concat('concat(&quot;http://',$host,'&quot;,.)')" xproc:type="comp">
+    <p:empty xproc:type="comp"></p:empty>
+  </p:with-option>
+</p:string-replace>
+
+<p:identity name="extract-uri" xproc:step="true" xproc:type="std-step">
+  <p:input port="source" select="/*/uri" xproc:type="comp">
+    <p:pipe step="patch-test-uris" port="result" xproc:type="comp"></p:pipe>
+  </p:input>
+</p:identity>
+
+<p:choose xproc:step="true" xproc:type="comp-step">
+  <p:xpath-context xproc:type="comp">
+    <p:empty xproc:type="comp"></p:empty>
+  </p:xpath-context>
+  <p:when test="$host = 'tests.xproc.org'" xproc:step="true" xproc:type="comp-step"><p:with-option xproc:type="comp" name="test" select="$host = 'tests.xproc.org'"></p:with-option>
+    <p:wrap-sequence wrapper="test-suites" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="wrapper" select="test-suites"></p:with-option>
+      <p:input port="source" xproc:type="comp">
+	<p:pipe step="extract-uri" port="result" xproc:type="comp"></p:pipe>
+	
+      </p:input>
+    </p:wrap-sequence>
+  </p:when>
+  <p:otherwise xproc:step="true" xproc:type="comp-step">
+    <p:wrap-sequence wrapper="test-suites" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="wrapper" select="test-suites"></p:with-option>
+      <p:input port="source" xproc:type="comp">
+	<p:pipe step="extract-uri" port="result" xproc:type="comp"></p:pipe>
+	<p:inline xproc:type="comp">
+	  <uri xmlns:cx="http://xmlcalabash.com/ns/extensions">http://localhost:8130/tests/test-suite.xml</uri>
+	</p:inline>
+      </p:input>
+    </p:wrap-sequence>
+  </p:otherwise>
+</p:choose>
+
+<p:exec command="/projects/src/calabash/generate-test-report" xproc:type="error">
+  <p:input port="source" xproc:type="comp">
+    <p:empty xproc:type="comp"></p:empty>
+  </p:input>
+  <p:with-option name="args" select="string-join(//uri,' ')" xproc:type="comp"></p:with-option>
+</p:exec>
+
+<p:choose xproc:step="true" xproc:type="comp-step">
+  <p:when test="$password = ''" xproc:step="true" xproc:type="comp-step"><p:with-option xproc:type="comp" name="test" select="$password = ''"></p:with-option>
+    <p:identity xproc:step="true" xproc:type="std-step"></p:identity>
+  </p:when>
+  <p:otherwise xproc:step="true" xproc:type="comp-step">
+    <p:wrap wrapper="c:body" match="/" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="wrapper" select="c:body"></p:with-option><p:with-option xproc:type="comp" name="match" select="/"></p:with-option>
+      <p:input port="source" select="/c:result/*" xproc:type="comp"></p:input>
+    </p:wrap>
+
+    <p:add-attribute match="c:body" attribute-name="content-type" attribute-value="application/xml" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="match" select="c:body"></p:with-option><p:with-option xproc:type="comp" name="attribute-name" select="content-type"></p:with-option><p:with-option xproc:type="comp" name="attribute-value" select="application/xml"></p:with-option></p:add-attribute>
+
+    <p:wrap wrapper="c:request" match="/" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="wrapper" select="c:request"></p:with-option><p:with-option xproc:type="comp" name="match" select="/"></p:with-option></p:wrap>
+
+    <p:add-attribute attribute-name="password" match="/c:request" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="attribute-name" select="password"></p:with-option><p:with-option xproc:type="comp" name="match" select="/c:request"></p:with-option>
+      <p:with-option name="attribute-value" select="$password" xproc:type="comp"></p:with-option>
+    </p:add-attribute>
+
+    <p:add-attribute attribute-name="username" match="/c:request" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="attribute-name" select="username"></p:with-option><p:with-option xproc:type="comp" name="match" select="/c:request"></p:with-option>
+      <p:with-option name="attribute-value" select="$username" xproc:type="comp"></p:with-option>
+    </p:add-attribute>
+
+    <p:add-attribute attribute-name="href" match="/c:request" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="attribute-name" select="href"></p:with-option><p:with-option xproc:type="comp" name="match" select="/c:request"></p:with-option>
+      <p:with-option name="attribute-value" select="concat('http://',$host,'/results/submit/report')" xproc:type="comp"></p:with-option>
+    </p:add-attribute>
+
+    <p:set-attributes match="c:request" xproc:step="true" xproc:type="std-step"><p:with-option xproc:type="comp" name="match" select="c:request"></p:with-option>
+      <p:input port="attributes" xproc:type="comp">
+	<p:inline xproc:type="comp">
+	  <c:request xmlns:cx="http://xmlcalabash.com/ns/extensions" method="post" auth-method="Basic" send-authorization="true"></c:request>
+	</p:inline>
+      </p:input>
+    </p:set-attributes>
+
+    <p:http-request xproc:step="true" xproc:type="std-step"></p:http-request>
+  </p:otherwise>
+</p:choose>
+
+</p:declare-step>

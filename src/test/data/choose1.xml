@@ -1,0 +1,15 @@
+<p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
+  <p:input port="source"/>
+  <p:output port="result"/>
+  <p:choose>
+    <p:xpath-context>
+      <p:pipe step="main" port="source"/>
+    </p:xpath-context>
+    <p:when test="count(//*) gt 2">
+    <p:identity><p:input port="source"><p:inline><result>greater then 2 </result></p:inline></p:input></p:identity>
+    </p:when>
+    <p:otherwise>
+    <p:identity><p:input port="source"><p:inline><result>less then 2</result></p:inline></p:input></p:identity>
+  </p:otherwise>
+  </p:choose>
+</p:declare-step>

@@ -503,7 +503,7 @@ return
 
  for $pinput in $currentstep//p:input[@primary eq "false"]
  return
- <xproc:input port="{$pinput/@port}" select="/">
+ <xproc:input port="{$pinput/@port}" select="/" step="{$step-name}">
    {
  let $data :=  if($pinput/*) then
        for $input in $pinput/*

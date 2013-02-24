@@ -857,3 +857,147 @@ declare function  test:runExtest1() {
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)    
 };
 
+
+
+declare function  test:runAddAttribute1() { 
+  let $pipeline := 
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+	    <p:input port="source"/>
+	    <p:output port="result"/>
+	    <p:add-attribute attribute-name="gender" attribute-value="Male" match="/people/person"/>
+	</p:declare-step>
+
+  let $stdin    := <people><person/><person/></people>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+    return
+      assert:equal($result,document{<people xmlns="">
+	<person gender="Male"></person>
+	<person gender="Male"></person>
+      </people>})    
+};
+
+declare function  test:runAddAttribute2() { 
+  let $pipeline := 
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+	    <p:input port="source"/>
+	    <p:output port="result"/>
+	    <p:add-attribute attribute-name="gender" attribute-value="Male" match="person"/>
+	</p:declare-step>
+
+  let $stdin    := <people><person/><person/></people>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+    return
+      assert:equal($result,document{<people xmlns="">
+	<person gender="Male"></person>
+	<person gender="Male"></person>
+      </people>})    
+};
+
+
+declare function  test:runAddXMLBase() { 
+  let $pipeline :=
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+	   <p:input port="source">
+	      <p:document href="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"/>
+	   </p:input>
+	   <p:output port="result"/>
+	   <p:add-xml-base/>
+	   <p:identity/>
+	</p:declare-step>
+  let $stdin    := ()
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+    return
+      assert:equal($result,document{<people xml:base="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"><person/><person/></people>})    
+};
+
+
+declare function  test:runPack2() { 
+  let $pipeline :=
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:pack wrapper="NewFilmElement">
+        <p:input port="alternate">
+          <p:inline><b>asdfsdaF</b></p:inline>
+        </p:input>
+   </p:pack>
+</p:declare-step>
+
+  let $stdin    := <people><person/><person/></people>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+    return
+      assert:equal($result,<NewFilmElement><people><person/><person/></people><b xmlns:c="http://www.w3.org/ns/xproc-step">asdfsdaF</b></NewFilmElement>)
+};
+
+
+declare function  test:runXSLT1() { 
+  let $pipeline :=
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:xslt>
+      <p:input port="stylesheet">
+      <p:inline>
+        <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  version="2.0">
+          <xsl:template match="node()">
+            <html>
+              <body>
+                <h1>Film list</h1>
+                <ul>
+                  <xsl:apply-templates select="//title"/>
+                </ul>
+              </body>
+            </html>
+          </xsl:template>
+          <xsl:template match="title">
+            <li>
+              <xsl:value-of select="node()"/>
+            </li>
+          </xsl:template>
+        </xsl:stylesheet>
+      </p:inline>
+      </p:input>
+      <p:input port="parameters">
+         <p:empty/>
+      </p:input>
+   </p:xslt>
+</p:declare-step>
+  let $stdin    := <films><title>One who did not fly</title><title>Great Unexpectations</title></films>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  return
+    assert:equal($result,document{<html xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
+	<body>
+	  <h1>Film list</h1>
+	  <ul>
+	    <li>One who did not fly</li>
+	    <li>Great Unexpectations</li>
+	  </ul>
+	</body>
+      </html>})
+};
+

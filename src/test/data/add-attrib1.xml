@@ -1,0 +1,5 @@
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+	    <p:input port="source"/>
+	    <p:output port="result"/>
+	    <p:add-attribute attribute-name="gender" attribute-value="Male" match="/people/person"/>
+	</p:declare-step>

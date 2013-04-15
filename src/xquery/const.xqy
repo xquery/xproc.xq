@@ -1,5 +1,5 @@
 (:~ ------------------------------------------------------------------------------------- 
- 
+  
 	const.xqm - contains all constants used by xprocxq.
 	
 ---------------------------------------------------------------------------------------- :)
@@ -29,6 +29,7 @@ declare variable $const:NS_XPROC_ERR  := "http://www.w3.org/ns/xproc-error";
 (: -------------------------------------------------------------------------- :)
 (:~ Serialization Constants :)
 (: -------------------------------------------------------------------------- :)
+
 declare variable $const:DEFAULT_SERIALIZE  := 'method=xml indent=yes';
 declare variable $const:TRACE_SERIALIZE    := 'method=xml';
 declare variable $const:XINCLUDE_SERIALIZE := 'expand-xincludes=yes';
@@ -42,16 +43,17 @@ declare variable $const:ESCAPE_SERIALIZE   := 'method=xml indent=no';
 declare variable $const:NS_XPROC_EXT     := "http://xproc.net/ns/xproc/ex";
 declare variable $const:NS_XPROC_ERR_EXT := "http://xproc.net/ns/errors";
 
+declare variable $const:module_root as xs:string := xdmp:modules-root();
 
 (: -------------------------------------------------------------------------- :)
 (:~ Error Dictionary lookup :) (:~ @TODO - obviously need to remove these absolute paths :)
 (: -------------------------------------------------------------------------- :)
-declare variable $const:error :=  xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/error-codes.xml",<options xmlns="xdmp:document-get">
+declare variable $const:error :=  xdmp:document-get( $const:module_root || "xquery/etc/error-codes.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>);
        
-declare variable  $const:xprocxq-error  := xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/xproc-error-codes.xml",<options xmlns="xdmp:document-get">
+declare variable  $const:xprocxq-error  := xdmp:document-get( $const:module_root || "xquery/etc/xproc-error-codes.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>);
@@ -59,19 +61,19 @@ declare variable  $const:xprocxq-error  := xdmp:document-get("/Users/jfuller/Sou
 (: -------------------------------------------------------------------------- :)
 (:~ Step Definition lookup :) (:~ @TODO - obviously need to remove these absolute paths :)
 (: -------------------------------------------------------------------------- :)
-declare variable $const:ext-steps  := xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/pipeline-extension.xml",<options xmlns="xdmp:document-get">
+declare variable $const:ext-steps  := xdmp:document-get( $const:module_root || "xquery/etc/pipeline-extension.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)/p:library; 
-declare variable $const:std-steps  := xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/pipeline-standard.xml",<options xmlns="xdmp:document-get">
+declare variable $const:std-steps  := xdmp:document-get($const:module_root || "xquery/etc/pipeline-standard.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)/p:library; 
-declare variable $const:opt-steps  := xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/pipeline-optional.xml",<options xmlns="xdmp:document-get">
+declare variable $const:opt-steps  := xdmp:document-get( $const:module_root || "xquery/etc/pipeline-optional.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)/p:library; 
-declare variable $const:comp-steps := xdmp:document-get("/Users/jfuller/Source/Webcomposite/xprocxq_new/src/xquery/etc/xproc-component.xml",<options xmlns="xdmp:document-get">
+declare variable $const:comp-steps := xdmp:document-get( $const:module_root || "xquery/etc/xproc-component.xml",<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)/xproc:components;

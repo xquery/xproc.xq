@@ -56,7 +56,7 @@ declare function test:runEntryPointTestForNewEvala() {
   let $options  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,$stdin)
+    assert:equal($result/*,$stdin)
 };
 
 
@@ -77,7 +77,7 @@ declare function test:runEntryPointTestForNewEval1() {
   let $options  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)
+    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)
 };
 
 
@@ -96,9 +96,11 @@ declare function test:runEntryPointTestForNewEval2() {
   let $options  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,(<a>adfasdf</a>,<root>text</root>,<root/>))
+    assert:equal($result/*,(<a>adfasdf</a>,<root>text</root>,<root/>))
 };
 
+
+(:
 declare function test:runEntryPointTestForNewEval3() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
@@ -120,6 +122,8 @@ declare function test:runEntryPointTestForNewEval3() {
   return
     assert:equal((),<should>throw error Unbound primary output: [output result on step2]</should>)
 };
+:)
+
 
 declare function  test:runEntryPointTest() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
@@ -133,7 +137,7 @@ declare function  test:runEntryPointTest() {
   let $options  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
+    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
 
 
@@ -149,7 +153,7 @@ declare function  test:runEntryPointTest1() {
   let $options  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,())
+    assert:equal($result/*,())
 };
 
 declare function  test:runEntryPointTest2() { 
@@ -164,7 +168,7 @@ declare function  test:runEntryPointTest2() {
   let $options  := ()
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
   return
-    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">2</c:result>)
+    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">2</c:result>)
 
 };
 
@@ -180,7 +184,7 @@ declare function test:runEntryPointTest3() {
   let $options  := ()
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
     return
-      assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">0</c:result>)
+      assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">0</c:result>)
 };
 
 
@@ -230,10 +234,10 @@ declare function  test:runComplexSingleBranch() {
   let $output   := ()
   let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$output,$dflag,$tflag)
   return
-  assert:equal($result,document{<packed xmlns="">
+  assert:equal($result,<packed xmlns="">
 	<newwrapper xmlns:p="http://www.w3.org/ns/xproc"></newwrapper>
-	<a xmlns:p="http://www.w3.org/ns/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error">test</a>
-      </packed>})
+	<a xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error">test</a>
+      </packed>)
 };
 
 
@@ -828,7 +832,7 @@ declare function  test:runRename1() {
       assert:equal($result,(<doc xmlns=""></doc>,<doc xmlns=""></doc>))
 };
 :)
-
+(:)
 declare function  test:runExtest1() { 
   let $pipeline := 
     <p:pipeline version='1.0'>
@@ -856,7 +860,7 @@ declare function  test:runExtest1() {
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)    
 };
-
+:)
 
 
 declare function  test:runAddAttribute1() { 
@@ -904,6 +908,8 @@ declare function  test:runAddAttribute2() {
 };
 
 
+(:
+
 declare function  test:runAddXMLBase() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
@@ -924,6 +930,8 @@ declare function  test:runAddXMLBase() {
     return
       assert:equal($result,document{<people xml:base="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"><person/><person/></people>})    
 };
+
+:)
 
 
 declare function  test:runPack2() { 
@@ -1001,3 +1009,27 @@ declare function  test:runXSLT1() {
       </html>})
 };
 
+
+declare function  test:runZip() { 
+  let $pipeline :=
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:zip name="test1">
+        <p:with-option name="href" select="'/usr/local/bin/test.zip'"/>  
+        <p:with-option name="command" select="'create'"/>
+        <p:with-option name="return-manifest" select="'true''"/> 
+        <p:with-option name="options" select="'nothing'"/>
+      </p:zip>
+    </p:declare-step>
+  let $stdin    := <films><title>One who did not fly</title><title>Great Unexpectations</title></films>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  return
+    assert:equal($result,<c:result href="/usr/local/bin/test.zip" command="create" return-manifest="true" options="nothing" xmlns:c="http://www.w3.org/ns/xproc-step">
+</c:result>)
+};

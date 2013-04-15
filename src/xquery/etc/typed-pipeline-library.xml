@@ -320,4 +320,8 @@
       <p:option name="href" required="true" e:type="xsd:anyURI"/>
       <p:option name="content-type" e:type="xsd:string"/>
    </p:declare-step>
+   <p:declare-step type="p:zip" xml:id="zip">
+      <p:input port="source" sequence="true" primary="true"/>
+      <p:output port="result" sequence="true"/>
+   </p:declare-step>   
 </p:library>

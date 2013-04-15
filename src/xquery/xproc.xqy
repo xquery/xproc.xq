@@ -121,24 +121,6 @@ declare function xproc:choose(
   $options,
   $currentstep
 ) {
-  (:
-let $namespaces := xproc:enum-namespaces($currentstep)
-  
-let $defaultname as xs:string := string($currentstep/@xproc:default-name)
-
-let $when-sorted :=  parse:pipeline-step-sort( $currentstep/p:when[1]/node()  , () )
-let $ast-when := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >
-<p:input port="source"/>
-<p:output port="result"/>
-{$when-sorted}
-{xproc:genExtPost($when-sorted)}
-</p:declare-step>
-
-let $when-result :=   xproc:output(xproc:evalAST($ast-when,$xproc:eval-step,$namespaces,$primary,(),()), 0)
-return
-(xdmp:log($result),$result)
-
-:)
   
 let $namespaces := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
@@ -583,7 +565,8 @@ let $result :=  $data (: u:evalXPATH(string($pinput/@select),$data) :)
  let $variables    := ()
  let $with-options := xproc:eval-with-options($ast,$step)
 
- let $currentstep  := $ast/*[@xproc:default-name eq $step]
+    let $currentstep  := $ast/*[@xproc:default-name eq $step]
+    let $_ := xdmp:log($currentstep)
  let $stepfunction := if ($currentstep/@type) then $std:identity else xproc:getstep( name($currentstep) )
 
  let $primary      := xproc:eval-primary($ast,$currentstep,$primaryinput, ())
@@ -755,8 +738,7 @@ return
  let $checkAST          := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
  let $eval_result       := xproc:evalAST($ast,$xproc:eval-step,$namespaces,$stdin,$bindings,())
  let $serialized_result := xproc:output($eval_result,$dflag)
- return
- $serialized_result
+ return $serialized_result
 };
 
 
@@ -775,6 +757,21 @@ return
 (: -------------------------------------------------------------------------- :)
 declare function xproc:getstep($stepname as xs:string) {
 (: -------------------------------------------------------------------------- :)
+
+    (:
+    let $_ := xdmp:log($stepname)
+    let $pre := substring-before($stepname,":")
+    let $name := substring-after($stepname,":")
+    let $func := if($pre ne "p") then fn:function-lookup(xs:QName($stepname), 4)
+    else if($name eq ("group","try","catch","for-each","viewport","choose")) then
+     fn:function-lookup(xs:QName("xproc:" || $name), 4)
+    else
+     fn:function-lookup(xs:QName("std:" || $name), 4)
+    return
+    $func
+:)
+ 
+
 if ($stepname eq 'p:identity') then
   $std:identity
 else if($stepname eq 'p:count') then
@@ -857,6 +854,12 @@ else if($stepname eq 'p:namespace-rename') then
   $std:namespace-rename
 else if($stepname eq 'p:xinclude') then
   $std:xinclude
+else if($stepname eq 'p:zip') then
+  $opt:zip
+else if($stepname eq 'p:unzip') then
+  $opt:unzip
 else
- $std:identity
+  (: other definitions :)
+  ()
+ 
 };

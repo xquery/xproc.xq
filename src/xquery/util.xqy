@@ -42,6 +42,14 @@ declare variable $u:inputMap as map:map := map:map();
 (: -------------------------------------------------------------------------- :)
 
 
+
+declare function u:random(
+  $seed as xs:integer
+){
+ xdmp:random($seed)
+};
+
+
 declare function u:putInputMap(
   $key as xs:string,
   $value as item()*
@@ -396,6 +404,9 @@ return
  } ;
 
 declare function u:enum-ns($element){
+
+
+  
        for $child in $element/node()
             return
               if ($child instance of element() or $child instance of document-node()) then

@@ -79,7 +79,7 @@ module namespace parse = "http://xproc.net/xproc/parse";
    else if($const:comp-steps/xproc:element[@type=$name][@xproc:support eq 'true']) then
      'comp'
    else
-     'error'      (: check if unknown p: element else throw error XS0044:)
+     'error' || $const:opt-steps/p:declare-step[@type=$name]      (: check if unknown p: element else throw error XS0044:)
  };
 
  

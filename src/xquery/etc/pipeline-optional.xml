@@ -92,4 +92,19 @@
       <p:option name="href" required="true"/>
       <p:option name="content-type"/>
    </p:declare-step>
+   <p:declare-step type="p:zip" xml:id="zip" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
+     <p:input port="source" sequence="true" primary="true"/>
+     <p:output port="result"/>
+     <p:option name="href" required="true"/>
+     <p:option name="command" required="true"/>
+     <p:option name="return-manifest"/>     
+     <p:option name="options"/>      
+   </p:declare-step>
+   <p:declare-step type="p:unzip" xml:id="unzip" xproc:support="true">
+      <p:input port="source" primary="true" select="/"/>
+      <p:input port="parameters" kind="parameter" select="/"/>
+      <p:output port="result" primary="false" select="/"/>
+      <p:option name="href" required="true"/>
+      <p:option name="content-type"/>
+   </p:declare-step>  
 </p:library>

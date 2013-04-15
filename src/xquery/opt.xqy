@@ -16,7 +16,6 @@ declare namespace err="http://www.w3.org/ns/xproc-error";
 (: module imports :)
 import module namespace const = "http://xproc.net/xproc/const" at "const.xqy";
 import module namespace u = "http://xproc.net/xproc/util" at "util.xqy";
-(: import module namespace xslfo = "http://exist-db.org/xquery/xslfo"; (: for p:xsl-formatter :) :)
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -31,6 +30,8 @@ declare variable $opt:validate-with-schematron := opt:validate#4;
 declare variable $opt:validate-with-relax-ng := opt:validate#4;
 declare variable $opt:xquery := opt:xquery#4;
 declare variable $opt:xsl-formatter := opt:xsl-formatter#4;
+declare variable $opt:zip := opt:zip#4;
+declare variable $opt:unzip := opt:unzip4;
 
 
 (: -------------------------------------------------------------------------- :)
@@ -95,11 +96,29 @@ declare function opt:xsl-formatter($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 declare function opt:xquery($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
-
-let $query := u:get-secondary('query',$secondary)
+let $query := u:getInputMap($secondary/@step || "#query") 
 return
       u:xquery($query/text(),$primary,$options[@name])
 };
+
+
+(: -------------------------------------------------------------------------- :)
+declare function opt:zip($primary,$secondary,$options,$variables) {
+(: -------------------------------------------------------------------------- :)
+let $href  :=   u:get-option('href',$options,$primary)
+let $command  := u:get-option('command',$options,$primary)
+let $return-manifest  := u:get-option('return-manifest',$options,$primary)
+let $opts  := u:get-option('options',$options,$primary)
+return
+    <c:result href="{$href}" command="{$command}" return-manifest="{$return-manifest}" options="{$opts}"></c:result>
+};
+
+(: -------------------------------------------------------------------------- :)
+declare function opt:unzip($primary,$secondary,$options,$variables) {
+(: -------------------------------------------------------------------------- :)
+()
+};
+
 
 
 

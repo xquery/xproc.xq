@@ -60,3 +60,14 @@ declare function  test:xsl-formatter() {
     assert:equal($actual,())
 };
 
+declare function  test:zip() { 
+  let $actual := opt:zip(<test/>,(),(),())
+  return
+    assert:equal($actual,())
+};
+
+declare function  test:unzip() { 
+  let $actual := opt:unzip(<test/>,(),(),())
+  return
+    assert:equal($actual,())
+};

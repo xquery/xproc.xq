@@ -126,8 +126,7 @@ declare variable $const:xslt-output := <xsl:output omit-xml-declaration="yes"/>;
 
 declare variable $const:default-ns as xs:string:='
 
-
-    import module namespace p="http://www.w3.org/ns/xproc" at "src/xquery/functions.xqm";
+    import module namespace p="http://www.w3.org/ns/xproc" at "src/xquery/funcs/functions.xqy";
 
     declare namespace xproc = "http://xproc.net/xproc";
     declare namespace c="http://www.w3.org/ns/xproc-step";

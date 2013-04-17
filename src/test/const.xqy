@@ -4,7 +4,7 @@ module namespace test = "http://github.com/robwhitby/xray/test";
 
 import module namespace assert = "http://github.com/robwhitby/xray/assertions" at "/xray/src/assertions.xqy";
 
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/const.xqy";
+import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
 declare function test:loadModule() { 
   assert:equal($const:init_unique_id, '!1')

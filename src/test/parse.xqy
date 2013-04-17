@@ -4,9 +4,9 @@ module namespace test = "http://github.com/robwhitby/xray/test";
 
 import module namespace assert = "http://github.com/robwhitby/xray/assertions" at "/xray/src/assertions.xqy";
 
-import module namespace xproc = "http://xproc.net/xproc" at "/xquery/xproc.xqy";
+import module namespace xproc = "http://xproc.net/xproc" at "/xquery/core/xproc-impl.xqy";
 
-import module namespace parse = "http://xproc.net/xproc/parse" at "/xquery/parse.xqy";
+import module namespace parse = "http://xproc.net/xproc/parse" at "/xquery/core/parse.xqy";
 
 declare boundary-space strip;
 

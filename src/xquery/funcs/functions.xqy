@@ -19,7 +19,7 @@ declare namespace xsl   = "http://www.w3.org/1999/XSL/Transform";
 
 (:~ declare import :)
 
-import module namespace const = "http://xproc.net/xproc/const" at "const.xqm";
+import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -28,7 +28,9 @@ declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 
 (: -------------------------------------------------------------------------- :)
-declare function func:system-property($property){
+declare
+%xproc:func
+function func:system-property($property){
 (: -------------------------------------------------------------------------- :)
 if ($property eq 'p:version') then
   $const:version
@@ -56,7 +58,9 @@ should throw a u:dynamicError('err:XD0015',"")
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:version-available($version as xs:decimal){
+declare
+%xproc:func
+function func:version-available($version as xs:decimal){
 (: -------------------------------------------------------------------------- :)
   if ($version eq 1.0) then
     "true"
@@ -65,7 +69,9 @@ declare function func:version-available($version as xs:decimal){
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:value-available($value1, $value2){
+declare
+%xproc:func
+function func:value-available($value1, $value2){
 (: -------------------------------------------------------------------------- :)
     "true"
 };

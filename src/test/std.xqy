@@ -4,7 +4,7 @@ module namespace test = "http://github.com/robwhitby/xray/test";
 
 import module namespace assert = "http://github.com/robwhitby/xray/assertions" at "/xray/src/assertions.xqy";
 
-import module namespace std = "http://xproc.net/xproc/std" at "/xquery/std.xqy";
+import module namespace std = "http://xproc.net/xproc/std" at "/xquery/steps/std.xqy";
 
 (: declare namespaces :)
 declare namespace xproc = "http://xproc.net/xproc";

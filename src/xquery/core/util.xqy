@@ -27,7 +27,7 @@ declare namespace xxq-error = "http://xproc.net/xproc/error";
 declare namespace saxon ="http://test.org/saxon";
 
 (:~ Module Imports :)
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/const.xqy";
+import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 

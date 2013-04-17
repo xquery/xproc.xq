@@ -3,7 +3,7 @@
                     name="xproc-optional-library">
     
    <p:declare-step type="p:exec" xml:id="exec"
-                   xmlns:xproc="http://xproc.net/xproc" xproc:step-name="opt:exec" xproc:support="true">
+                   xmlns:xproc="http://xproc.net/xproc"  xproc:step="true" xproc:step-name="opt:exec" xproc:support="true">
       <p:input port="source" primary="true" sequence="true" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:output port="errors" select="/"/>
@@ -32,7 +32,7 @@
       <p:option name="undeclare-prefixes"/>
       <p:option name="version" select="'1.0'"/>
    </p:declare-step>
-   <p:declare-step type="p:hash" xml:id="hash" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
+   <p:declare-step type="p:hash" xml:id="hash"  xproc:step="true" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:input port="parameters" kind="parameter" select="/"/>
@@ -41,34 +41,34 @@
       <p:option name="version"/>
       <p:option name="match" required="true"/>
    </p:declare-step>
-   <p:declare-step type="p:uuid" xml:id="uuid" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
+   <p:declare-step type="p:uuid" xml:id="uuid"  xproc:step="true" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:option name="match" required="true"/>
       <p:option name="version"/>
    </p:declare-step>
-   <p:declare-step type="p:validate-with-relax-ng" xml:id="validate-with-relax-ng"  xproc:support="true">
+   <p:declare-step type="p:validate-with-relax-ng"  xproc:step="true" xml:id="validate-with-relax-ng"  xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:input port="schema" primary="false" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:option name="dtd-compatibility" select="'false'"/>
       <p:option name="assert-valid" select="'true'"/>
    </p:declare-step>
-   <p:declare-step type="p:validate-with-schematron" xml:id="validate-with-schematron" xproc:support="true">
+   <p:declare-step type="p:validate-with-schematron"  xproc:step="true" xml:id="validate-with-schematron" xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:input port="schema" primary="false" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:output port="report" sequence="true" select="/"/>
       <p:option name="assert-valid" select="'true'"/>
    </p:declare-step>
-   <p:declare-step type="p:validate-with-xml-schema" xml:id="validate-with-xml-schema" xproc:support="true">
+   <p:declare-step type="p:validate-with-xml-schema"  xproc:step="true" xml:id="validate-with-xml-schema" xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:input port="schema" primary="false" sequence="true" select="/"/>
       <p:output port="result" primary="true" select="/"/>
       <p:option name="assert-valid" select="'true'"/>
       <p:option name="mode" select="'strict'"/>
    </p:declare-step>
-   <p:declare-step type="p:www-form-urldecode" xml:id="www-form-urldecode" xproc:support="true">
+   <p:declare-step type="p:www-form-urldecode"  xproc:step="true" xml:id="www-form-urldecode" xproc:support="true">
       <p:output port="result" primary="true" select="/"/>
       <p:option name="value" required="true"/>
    </p:declare-step>
@@ -78,7 +78,7 @@
       <p:input port="parameters" kind="parameter"/>
       <p:option name="match" required="true"/>
    </p:declare-step>
-   <p:declare-step type="p:xquery" xml:id="xquery" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
+   <p:declare-step type="p:xquery"  xproc:step="true" xml:id="xquery" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
       <p:input port="source" sequence="true" primary="true" select="/"/>
       <p:input port="query"  primary="false" select="/"/>
       <p:input port="parameters" kind="parameter" select="/"/>
@@ -92,7 +92,7 @@
       <p:option name="href" required="true"/>
       <p:option name="content-type"/>
    </p:declare-step>
-   <p:declare-step type="p:zip" xml:id="zip" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
+   <p:declare-step type="p:zip"  xproc:step="true" xml:id="zip" xmlns:xproc="http://xproc.net/xproc" xproc:support="true">
      <p:input port="source" sequence="true" primary="true"/>
      <p:output port="result"/>
      <p:option name="href" required="true"/>
@@ -100,7 +100,7 @@
      <p:option name="return-manifest"/>     
      <p:option name="options"/>      
    </p:declare-step>
-   <p:declare-step type="p:unzip" xml:id="unzip" xproc:support="true">
+   <p:declare-step type="p:unzip"  xproc:step="true" xml:id="unzip" xproc:support="true">
       <p:input port="source" primary="true" select="/"/>
       <p:input port="parameters" kind="parameter" select="/"/>
       <p:output port="result" primary="false" select="/"/>

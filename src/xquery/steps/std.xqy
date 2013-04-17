@@ -15,8 +15,9 @@ declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 
 (: module imports :)
-import module namespace const = "http://xproc.net/xproc/const" at "const.xqy";
-import module namespace u = "http://xproc.net/xproc/util" at "util.xqy";
+import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
+import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+
 declare namespace http = "http://www.expath.org/mod/http-client";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
@@ -64,7 +65,9 @@ declare function std:ns-for-xslt($primary){
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function std:add-attribute($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:add-attribute($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-option('match',$options,$primary)
@@ -105,7 +108,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:add-xml-base($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:add-xml-base($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $template := <xsl:stylesheet version="2.0">
@@ -140,7 +145,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:compare($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:compare($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $alternate := u:getInputMap($secondary/@step || "#alternate")
 (: let $strict := u:get-option('xproc:strict',$options,$v)  ext attribute xproc:strict:) 
@@ -158,7 +165,9 @@ return
 
 
 (: --------------------------------------------------------------------------------------- :)
-declare function std:count($primary,$secondary,$options,$variables) as element(c:result){
+declare
+%xproc:step
+function std:count($primary,$secondary,$options,$variables) as element(c:result){
 (: --------------------------------------------------------------------------------------- :)
 let $limit as xs:integer := xs:integer(u:get-option('limit',$options,$primary)) 
 let $count as xs:integer := if(name($primary[1]) eq '') then count($primary/*)  else count($primary)
@@ -171,7 +180,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:delete($primary,$secondary,$options,$variables){
+declare
+%xproc:step
+function std:delete($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 (: let $ns := u:enum-ns(<dummy>{$primary}</dummy>) :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
@@ -204,7 +215,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:directory-list($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:directory-list($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $path := u:get-option('path',$options,$primary)
 let $include-filter := u:get-option('include-filter',$options,$primary)
@@ -224,7 +237,9 @@ let $result :=
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:escape-markup($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:escape-markup($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $cdata-section-elements := u:get-option('cdata-section-elements',$options,$primary)
 let $doctype-public         := u:get-option('doctype-public',$options,$primary)
@@ -244,7 +259,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:error($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:error($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $code := u:get-option('code',$options,$primary)
 let $err := <c:errors>
@@ -258,7 +275,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:filter($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:filter($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $select := u:get-option('select',$options,$primary)
 return
@@ -272,7 +291,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:http-request($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:http-request($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $byte-order-mark        := u:get-option('byte-order-mark',$options,$primary)
 let $cdata-section-elements := u:get-option('cdata-section-elements',$options,$primary)
@@ -341,7 +362,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:identity($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:identity($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 
 let $template := <xsl:stylesheet version="2.0"  xmlns:p="http://www.w3.org/ns/xproc">
@@ -364,7 +387,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:insert($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:insert($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $insertion := u:getInputMap($secondary/@step || "#insertion") 
@@ -437,7 +462,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:label-elements($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:label-elements($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-option('match',$options,$primary)
@@ -487,7 +514,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:load($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:load($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $href := u:get-option('href',$options,$primary)
 let $dtd-validate := u:get-option('dtd-validate',$options,$primary)
@@ -505,7 +534,9 @@ try {
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:make-absolute-uris($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:make-absolute-uris($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match    := u:get-option('match',$options,$primary)
@@ -562,7 +593,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:namespace-rename($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:namespace-rename($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns        := u:get-secondary('xproc:namespaces',$secondary)/*
 let $from      := u:get-option('from',$options,$primary)
@@ -632,7 +665,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:pack($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:pack($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $alternate := u:getInputMap($secondary/@step || "#alternate") 
 let $wrapper := u:get-option('wrapper',$options,$primary)
@@ -658,7 +693,9 @@ declare function std:parameters($primary,$secondary,$options,$variables) {
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:rename($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:rename($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-option('match',$options,$primary)
@@ -712,7 +749,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:replace($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:replace($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $replacement :=  u:getInputMap($secondary/@step || "#replacement")
@@ -759,7 +798,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:set-attributes($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:set-attributes($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $attributes := u:getInputMap($secondary/@step || "#attributes") 
@@ -801,14 +842,18 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:sink($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:sink($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 ()
 };
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:split-sequence($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:split-sequence($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $test         := u:get-option('test',$options,$primary)
 let $initial-only := u:get-option('initial-only',$options,$primary)
@@ -828,7 +873,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:store($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:store($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $href                   := u:get-option('href',$options,$primary)
 let $byte-order-mark        := u:get-option('byte-order-mark',$options,$primary)
@@ -850,7 +897,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:string-replace($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:string-replace($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-string-option('match',$options,$primary)
@@ -896,7 +945,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:unescape-markup($primary,$secondary,$options,$variables){
+declare
+%xproc:step
+function std:unescape-markup($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 
@@ -919,14 +970,18 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:xinclude($primary,$secondary,$options,$variables){
+declare
+%xproc:step
+function std:xinclude($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 ()
 };
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:wrap($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:wrap($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-option('match',$options,$primary)
@@ -971,7 +1026,9 @@ return
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:wrap-sequence($primary,$secondary,$options,$variables) as item()*{
+declare
+%xproc:step
+function std:wrap-sequence($primary,$secondary,$options,$variables) as item()*{
 (: -------------------------------------------------------------------------- :)
 let $wrapper           as xs:string  := u:get-option('wrapper',$options,$primary)
 let $wrapper-prefix    as xs:string  := u:get-option('wrapper-prefix',$options,$primary)
@@ -994,7 +1051,9 @@ else
 
 
 (: -------------------------------------------------------------------------- :)
-declare function std:unwrap($primary,$secondary,$options,$variables) {
+declare
+%xproc:step
+function std:unwrap($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 
 let $match  := u:get-option('match',$options,$primary)
@@ -1026,7 +1085,9 @@ return
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function std:xslt($primary,$secondary,$options,$variables){
+declare
+%xproc:step
+function std:xslt($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 let $stylesheet := u:getInputMap($secondary[@port eq "stylesheet"]/@step || "#stylesheet")
 return

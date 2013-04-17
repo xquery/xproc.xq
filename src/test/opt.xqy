@@ -4,7 +4,7 @@ module namespace test = "http://github.com/robwhitby/xray/test";
 
 import module namespace assert = "http://github.com/robwhitby/xray/assertions" at "/xray/src/assertions.xqy";
          
-import module namespace opt = "http://xproc.net/xproc/opt" at "/xquery/opt.xqy";
+import module namespace opt = "http://xproc.net/xproc/opt" at "/xquery/steps/opt.xqy";
     
 declare function test:loadModuleTest() { 
   let $actual := <test/>

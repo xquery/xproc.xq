@@ -17,7 +17,7 @@ module namespace parse = "http://xproc.net/xproc/parse";
  declare namespace opt="http://xproc.net/xproc/opt";
 
  (: module imports :)
- import module namespace const = "http://xproc.net/xproc/const" at "const.xqy";
+ import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
  declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -91,7 +91,7 @@ module namespace parse = "http://xproc.net/xproc/parse";
   : @returns node()*
   :)
  (: --------------------------------------------------------------------------------------------------------- :)
- declare function parse:pipeline-step-sort($unsorted, $sorted) {
+ declare function parse:pipeline-step-sort($unsorted, $sorted) as item()*{
  (: --------------------------------------------------------------------------------------------------------- :)
     if (count($unsorted) eq 0) then
       (remove($sorted,1),

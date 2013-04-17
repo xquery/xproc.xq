@@ -675,11 +675,6 @@ let $wrapper-prefix := u:get-option('wrapper-prefix',$options,$primary)
 let $wrapper-namespace := u:get-option('wrapper-namespace',$options,$primary)
 
 return
-if (count($primary/*) gt 0 and count($alternate/*) eq 0) then
-  for $a in $primary/*
-  return
-    element {$wrapper} {$a}
-else
 element {$wrapper} {$primary, $alternate}
 
 };
@@ -998,18 +993,9 @@ let $template := <xsl:stylesheet version="2.0"  xmlns:p="http://www.w3.org/ns/xp
 return
 <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
-<xsl:template match="node()">
+<xsl:template match="/">
 <xsl:copy>       
-  <xsl:for-each-group select="//p:option" group-adjacent="local-name()">
-    <xsl:choose>
-      <xsl:when test="current-grouping-key()">
-        <wrapper><xsl:copy/></wrapper>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:apply-templates select="."/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:for-each-group>
+        <xsl:element name="{$wrapper}"><xsl:copy-of select="."/></xsl:element>
 </xsl:copy>
 </xsl:template>
 

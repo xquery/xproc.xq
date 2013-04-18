@@ -21,10 +21,6 @@ import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 (: declare functions :)
-declare variable $ext:pre       := ext:pre#4;
-declare variable $ext:post      := ext:post#4;
-declare variable $ext:xproc     := ext:xproc#4;
-declare variable $ext:xsltforms := ext:xsltforms#4;
 
 (: -------------------------------------------------------------------------- :)
 declare

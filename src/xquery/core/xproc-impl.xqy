@@ -28,11 +28,6 @@ declare copy-namespaces preserve,no-inherit;
  (:~ declare steps :)
  declare variable $xproc:run-step      := xproc:run#7;
  declare variable $xproc:xproc-run     := xproc:xproc-run#4;
- declare variable $xproc:choose        := xproc:choose#4;
- declare variable $xproc:try           := xproc:try#4;
- declare variable $xproc:group         := xproc:group#4;
- declare variable $xproc:for-each      := xproc:for-each#4;
- declare variable $xproc:viewport      := xproc:viewport#4; 
 
  declare variable $xproc:declare-step  := ();
  declare variable $xproc:library       := ();
@@ -71,7 +66,7 @@ let $tflag  as xs:integer  := xs:integer(u:get-option('tflag',$options,$primary)
 declare function xproc:genExtPost(
   $sorted
 ) {
-<ext:post xproc:step="true" xproc:default-name="{$sorted[1]/@xproc:default-name}!">
+<ext:post xproc:step="true" xproc:func="ext:post#4" xproc:default-name="{$sorted[1]/@xproc:default-name}!">
   <p:input port="source" primary="true" select="/" xproc:type="comp">
     <p:pipe port="result" step="{$sorted[last()]/@xproc:default-name}" xproc:step-name="{$sorted[last()]/@xproc:default-name}"/>
   </p:input>

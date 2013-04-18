@@ -20,18 +20,7 @@ import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 (: declare functions :)
-declare variable $opt:exec := opt:exec#4;
-declare variable $opt:hash := opt:hash#4;
-declare variable $opt:uuid := opt:uuid#4;
-declare variable $opt:www-form-urldecode := opt:www-form-urldecode#4;
-declare variable $opt:www-form-urlencode := opt:www-form-urlencode#4;
-declare variable $opt:validate-with-xml-schema := opt:validate#4;
-declare variable $opt:validate-with-schematron := opt:validate#4;
-declare variable $opt:validate-with-relax-ng := opt:validate#4;
-declare variable $opt:xquery := opt:xquery#4;
-declare variable $opt:xsl-formatter := opt:xsl-formatter#4;
-declare variable $opt:zip := opt:zip#4;
-declare variable $opt:unzip := opt:unzip4;
+
 
 
 (: -------------------------------------------------------------------------- :)

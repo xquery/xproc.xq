@@ -803,7 +803,7 @@ declare function  test:runDeclareStep1() {
   let $outputs  := ()
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
     return
-      assert:equal($result,(<doc xmlns=""></doc>,<doc xmlns=""></doc>))
+      assert:equal($result,(<doc/>,<doc/>))
 };
 
 (:

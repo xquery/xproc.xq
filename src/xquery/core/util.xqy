@@ -41,8 +41,6 @@ declare variable $u:inputMap as map:map := map:map();
 (:~ Processor Specific                                                         :)
 (: -------------------------------------------------------------------------- :)
 
-
-
 declare function u:random(
   $seed as xs:integer
 ){

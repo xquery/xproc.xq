@@ -586,7 +586,7 @@ let $result :=  $data (: u:evalXPATH(string($pinput/@select),$data) :)
 
  let $currentstep  := $ast/*[@xproc:default-name eq $step]
 
-    let $stepfunction as function(*):= if ($currentstep/@type) then std:identity#4 else function-lookup(xs:QName(substring-before($currentstep/@xproc:func,'#')),xs:integer(substring-after($currentstep/@xproc:func,'#'))) 
+    let $stepfunction as function(*):= if ($currentstep/@type or $currentstep/@xproc:func eq "") then std:identity#4 else function-lookup(xs:QName(substring-before($currentstep/@xproc:func,'#')),xs:integer(substring-after($currentstep/@xproc:func,'#'))) 
 
  let $primary      := xproc:eval-primary($ast,$currentstep,$primaryinput, ())
  let $secondary    := xproc:eval-secondary($ast,$currentstep,$primaryinput,())

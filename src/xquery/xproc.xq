@@ -53,7 +53,7 @@ declare function xprocxq:xq(
     $tflag as xs:integer?
     ) as item()*
 {
- xproc:run2($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)   
+ xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)   
 };
 
 

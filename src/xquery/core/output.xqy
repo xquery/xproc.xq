@@ -2,8 +2,7 @@ xquery version "1.0-ml"  encoding "UTF-8";
 
 module namespace output = "http://xproc.net/xproc/output";
 
-declare boundary-space strip;
-declare copy-namespaces preserve,no-inherit;
+
 
  import module namespace const  = "http://xproc.net/xproc/const"  at "/xquery/core/const.xqy";
  import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
@@ -12,6 +11,10 @@ declare copy-namespaces preserve,no-inherit;
  declare namespace xproc = "http://xproc.net/xproc";
 
  declare default function namespace "http://www.w3.org/2005/xpath-functions";
+
+declare option xdmp:output "method=xml";
+declare option xdmp:output "encoding=utf-8";
+declare option xdmp:output "indent=yes";
 
  (:~
   : prepares the output from for xproc:stepFoldEngine

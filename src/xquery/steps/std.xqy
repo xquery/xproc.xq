@@ -644,7 +644,7 @@ let $wrapper-prefix := u:get-option('wrapper-prefix',$options,$primary)
 let $wrapper-namespace := u:get-option('wrapper-namespace',$options,$primary)
 
 return
-element {$wrapper} {$primary, $alternate}
+element {$wrapper} {($primary, $alternate)}
 
 };
 

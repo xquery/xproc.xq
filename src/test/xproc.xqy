@@ -745,7 +745,9 @@ declare function  test:runPack1() {
   let $pipeline := <p:declare-step version='1.0' name="pipeline"
 	    xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source" sequence="true"/>
-<p:input port="alt" sequence="true"/>
+    <p:input port="alt" sequence="true">
+    <p:inline><root>inline alt</root></p:inline>
+    </p:input>
 <p:output port="result"/>
 
 <p:pack wrapper="wrapper">
@@ -770,21 +772,14 @@ declare function  test:runPack1() {
 }</xproc:output> 
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
     return
-      assert:equal($result,(<sequence-wrapper xmlns="">
-	<wrapper>
-	  <doc1></doc1>
-	</wrapper>
-      </sequence-wrapper>,
-      <sequence-wrapper xmlns="">
-	<wrapper>
-	  <doc2></doc2>
-	</wrapper>
-      </sequence-wrapper>,
-      <sequence-wrapper xmlns="">
-	<wrapper>
-	  <doc3></doc3>
-	</wrapper>
-      </sequence-wrapper>))
+      assert:equal($result,<sequence-wrapper xmlns:xs="" xmlns:xsi="" xmlns:map="" xmlns:xproc="" xmlns="">
+		  <wrapper>
+		    <doc1></doc1>
+		    <doc2></doc2>
+		    <doc3></doc3>
+		    <root xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error">inline alt</root>
+		  </wrapper>
+		</sequence-wrapper>)
 };
 
 

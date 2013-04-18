@@ -23,37 +23,6 @@ declare namespace http = "http://www.expath.org/mod/http-client";
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 (: declare functions :)
-declare variable $std:add-attribute         := std:add-attribute#4;
-declare variable $std:add-xml-base          := std:add-xml-base#4;
-declare variable $std:count                 := std:count#4;
-declare variable $std:compare               := std:compare#4;
-declare variable $std:delete                := std:delete#4;
-declare variable $std:error                 := std:error#4;
-declare variable $std:filter                := std:filter#4;
-declare variable $std:directory-list        := std:directory-list#4;
-declare variable $std:escape-markup         := std:escape-markup#4;
-declare variable $std:http-request          := ();
-declare variable $std:identity              := std:identity#4;
-declare variable $std:insert                := std:insert#4;
-declare variable $std:label-elements        := std:label-elements#4;
-declare variable $std:load                  := std:load#4;
-declare variable $std:make-absolute-uris    := std:make-absolute-uris#4;
-declare variable $std:namespace-rename      := std:namespace-rename#4;
-declare variable $std:pack                  := std:pack#4;
-declare variable $std:parameters            := ();
-declare variable $std:rename                := std:rename#4;
-declare variable $std:replace               := std:replace#4;
-declare variable $std:set-attributes        := std:set-attributes#4;
-declare variable $std:sink                  := std:sink#4;
-declare variable $std:split-sequence        := std:split-sequence#4;
-declare variable $std:store                 := std:store#4;
-declare variable $std:string-replace        := std:string-replace#4;
-declare variable $std:unescape-markup       := std:unescape-markup#4;
-declare variable $std:xinclude              := std:xinclude#4;
-declare variable $std:wrap                  := std:wrap#4;
-declare variable $std:wrap-sequence         := std:wrap-sequence#4;
-declare variable $std:unwrap                := std:unwrap#4;
-declare variable $std:xslt                  := std:xslt#4;
 
 declare function std:ns-for-xslt($primary){
     for $n in $primary/*

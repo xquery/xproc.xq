@@ -4,18 +4,18 @@
                     name="xprocxq-extension-library">
                         
     <p:declare-step type="ext:pre" xproc:step="true"
-                    xproc:bindings="all" xproc:support="true" xproc:func="ext:pre">
+                    xproc:bindings="all" xproc:support="true" xproc:func="ext:pre#4">
         <p:input port="source" primary="true" sequence="true" select="/"/>
         <p:output port="result" primary="true" sequence="true" select="/"/>
     </p:declare-step>
 
-    <p:declare-step type="ext:post" xproc:step="true" xproc:support="true">
+    <p:declare-step type="ext:post" xproc:step="true" xproc:func="ext:post#4" xproc:support="true">
         <p:input port="source" primary="true" sequence="true" select="/"/>
         <p:output port="result
 " primary="true" sequence="true" select="/"/>
     </p:declare-step> 
 
-    <p:declare-step type="ext:xproc" xproc:step="true" xproc:support="true">
+    <p:declare-step type="ext:xproc" xproc:step="true" xproc:func="ext:xproc#4" xproc:support="true">
         <p:input port="source" primary="true" select="/"/>
         <p:input port="pipeline" primary="false" select="/"/>
         <p:input port="bindings" primary="false" select="/"/>
@@ -24,7 +24,7 @@
         <p:option name="tflag" select="0"/>
     </p:declare-step>
 
-    <p:declare-step type="ext:xsltforms"  xproc:step="true" xproc:support="false">
+    <p:declare-step type="ext:xsltforms"  xproc:step="true" xproc:func="ext:xsltforms" xproc:support="false">
            <p:input port="source" sequence="true" primary="true" select="/"/>
            <p:output port="result" primary="true" select="/"/>
            <p:option name="xsltformsURI"/>

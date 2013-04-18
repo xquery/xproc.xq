@@ -39,7 +39,6 @@ module namespace parse = "http://xproc.net/xproc/parse";
  };
 
 
-
  (: -------------------------------------------------------------------------- :)
  declare function parse:type($node) as xs:string{
  (: -------------------------------------------------------------------------- :)
@@ -82,7 +81,38 @@ module namespace parse = "http://xproc.net/xproc/parse";
      'error' || $const:opt-steps/p:declare-step[@type=$name]      (: check if unknown p: element else throw error XS0044:)
  };
 
- 
+
+ (:~
+  : determines type of xproc element<br/>
+  :
+  : std-step: standard xproc step<br/>
+  : opt-step: optional xproc step<br/>
+  : ext-step: xprocxq proprietary extension step<br/>
+  : declare-step: an author defined step<br/>
+  : comp-step: p:choose, p:viewport, etc<br/>
+  : comp: component (ex. p:input)<br/>
+  : error: means that the element has not been identified<br/>
+  : <br/>
+  : @returns 'std-step|opt-step|ext-step|declare-step|comp-step|comp|error(unknown type)'
+  :)
+ (: -------------------------------------------------------------------------- :)
+ declare function parse:func($node, $types,$type){
+ (: -------------------------------------------------------------------------- :)
+    let $name as xs:string := name($node)
+    return
+    if ($type eq 'std-step') then
+    $const:std-steps/p:declare-step[@type=$name][@xproc:support eq 'true']/@xproc:func
+    else if($type eq 'opt-step') then
+    $const:opt-steps/p:declare-step[@type=$name][@xproc:support eq 'true']/@xproc:func
+    else if($type eq 'ext-step') then
+    $const:ext-steps/p:declare-step[@type=$name][@xproc:support eq 'true']/@xproc:func    
+    else if($type eq 'comp-step') then
+    $const:comp-steps/xproc:element[@type=$name][@xproc:support eq 'true']/@xproc:func
+    else
+     ()
+ };
+
+
  (:~
   : sorts pipeline based on input port dependencies 
   :
@@ -95,7 +125,7 @@ module namespace parse = "http://xproc.net/xproc/parse";
  (: --------------------------------------------------------------------------------------------------------- :)
     if (count($unsorted) eq 0) then
       (remove($sorted,1),
-      <ext:post xproc:step="true" xproc:default-name="{$sorted[1]/@xproc:default-name}!">
+      <ext:post xproc:step="true" xproc:func="ext:post#4" xproc:default-name="{$sorted[1]/@xproc:default-name}!">
         <p:input port="source" primary="true" select="/" xproc:type="comp">
           <p:pipe port="result" step="{$sorted[last()]/@xproc:default-name}" xproc:step-name="{$sorted[last()]/@xproc:default-name}"/>
         </p:input>
@@ -455,6 +485,7 @@ return
                      else
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        $node/p:input[@port ne 'source'],
                        parse:input-port($node/p:input[@port eq 'source'], $step-definition), 
                        parse:output-port($node/p:output, $step-definition),
@@ -470,6 +501,7 @@ return
                      $node/namespace::*,
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        $node/p:log,
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition)
@@ -482,6 +514,7 @@ return
                      $node/namespace::*,
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        $node/p:log,
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition),
@@ -495,6 +528,7 @@ return
                      $node/namespace::*,
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        $node/p:log,
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition),
@@ -508,6 +542,7 @@ return
                      $node/namespace::*,
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition),
                        $node/p:xpath-context
@@ -520,6 +555,7 @@ return
                      $node/namespace::*,
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
+                       attribute xproc:func {"ext:pre#4"},
                        $node/p:log,
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition)
@@ -605,6 +641,7 @@ return
  (: --------------------------------------------------------------------------------------------------------- :)
     for $node at $count in $pipeline
     let $type :=  parse:type($node,$pipeline//@type)
+    let $func :=  parse:func($node,$pipeline//@type,$type)
 
 (: if (string($pipeline//@type) = name($node)) then "comp" else :)
     return 
@@ -666,6 +703,7 @@ return
                      $node/namespace::*,
                      if (contains($type,'step') or $type eq 'defined') then attribute xproc:step {fn:true()} else (),
                      attribute xproc:type {$type},
+                     attribute xproc:func {$func},
                      parse:explicit-type($node/node()) ,
                     if (contains($type,'step')) then
                        for $option in $node/@*[name(.) ne 'name']      (: normalize all step attribute options to be represented as p:with-option elements :)

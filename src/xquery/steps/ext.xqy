@@ -1,11 +1,10 @@
+xquery version "3.0" encoding "UTF-8";
+module namespace ext = "http://xproc.net/xproc/ext";
 (: ------------------------------------------------------------------------------------- 
 
 	ext.xqm - implements all xprocxq specific extension steps.
 	
----------------------------------------------------------------------------------------- :)
-xquery version "3.0" encoding "UTF-8";
-
-module namespace ext = "http://xproc.net/xproc/ext";
+ ---------------------------------------------------------------------------------------- :)
 
 (: declare namespaces :)
 declare namespace xproc = "http://xproc.net/xproc";

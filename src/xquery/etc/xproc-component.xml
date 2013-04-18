@@ -12,12 +12,12 @@
 
   <!-- multi-container steps//-->
 
-  <xproc:element type="p:group" xproc:step="true" xproc:support="true">
+  <xproc:element type="p:group" xproc:step="true" xproc:func="xproc:group#4" xproc:support="true">
     <p:input port="source" primary="true" select="/"/>
     <p:output port="result" primary="true" select="/"/>	
   </xproc:element>
 
-  <xproc:element type="p:choose" xproc:step="true" xproc:support="true">
+  <xproc:element type="p:choose" xproc:step="true" xproc:func="xproc:choose#4" xproc:support="true">
     <p:xpath-context port="source" primary="true" select="/"/>
     <p:input port="source" primary="true" select="/"/>
     <p:output port="result" primary="true" select="/"/>	
@@ -35,20 +35,20 @@
     <p:output port="result" primary="true" select="/"/>	
   </xproc:element>     
 
-  <xproc:element type="p:for-each" xproc:step="true" xproc:support="true">
+  <xproc:element type="p:for-each" xproc:step="true" xproc:func="xproc:for-each#4" xproc:support="true">
     <p:iteration-source port="source" primary="true" select="/"/>
     <p:input port="source" primary="true" select="/"/>
     <p:output port="result" primary="true" select="/"/>
   </xproc:element>
 
-  <xproc:element type="p:viewport" xproc:step="true" xproc:support="true">
+  <xproc:element type="p:viewport" xproc:step="true" xproc:func="xproc:viewport#4" xproc:support="true">
     <p:viewport-source port="source" primary="true" select="/"/>
     <p:input port="source" primary="true" select="/"/>
     <p:output port="result" primary="true" select="/"/>
     <p:option name="match" required="true"/>
   </xproc:element>
   
-  <xproc:element type="p:try" xproc:step="true" xproc:support="true">
+  <xproc:element type="p:try" xproc:step="true" xproc:func="xproc:try#4" xproc:support="true">
     <p:input port="source" primary="true" select="/"/>
     <p:output port="result" primary="true" select="/"/>	
   </xproc:element>

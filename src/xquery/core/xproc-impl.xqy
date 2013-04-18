@@ -23,7 +23,7 @@ declare copy-namespaces preserve,no-inherit;
  declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
  (:~ declare variables :)
- declare variable $xproc:eval-step     := xproc:evalstep#4;
+ declare variable $xproc:eval-step-func     := xproc:evalstep#4;
 
  (:~ declare steps :)
  declare variable $xproc:run-step      := xproc:run#7;
@@ -51,9 +51,7 @@ let $pipeline := u:get-secondary('pipeline',$secondary)/*
 let $bindings := u:get-secondary('binding',$secondary)/*
 let $dflag  as xs:integer  := xs:integer(u:get-option('dflag',$options,$primary))
 let $tflag  as xs:integer  := xs:integer(u:get-option('tflag',$options,$primary))
-    return
-  ()  
-  (: $xproc:run-step($pipeline,$primary,$bindings,$options,(),$dflag ,$tflag) :)
+return $xproc:run-step($pipeline,$primary,$bindings,$options,(),$dflag ,$tflag) 
 };
 
 
@@ -95,7 +93,7 @@ let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultn
 </p:declare-step>
 return
   output:serialize(
-   xproc:evalAST($ast,$xproc:eval-step,$namespaces,$primary,(),())
+   xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$primary,(),())
    ,0)
 };
 
@@ -138,13 +136,13 @@ return
     let $ast-when := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}"><p:input port="source"/>
 <p:output port="result"/>{$when-sorted}{xproc:genExtPost($when-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-when,$xproc:eval-step,$namespaces,$primary,(),()), 0)
+      output:serialize(xproc:evalAST($ast-when,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
   else
     let $otherwise-sorted :=  parse:pipeline-step-sort( $currentstep/p:otherwise/node()  , () )
     let $ast-otherwise := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" ><p:input port="source"/>
 <p:output port="result"/>{$otherwise-sorted}{xproc:genExtPost($otherwise-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-otherwise,$xproc:eval-step,$namespaces,$primary,(),()), 0)
+      output:serialize(xproc:evalAST($ast-otherwise,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
 
 };
 
@@ -170,9 +168,9 @@ let $ast-catch := <p:declare-step name="{$defaultname}" xproc:default-name="{$de
 
 return
   try{
-    output:serialize(xproc:evalAST($ast-try,$xproc:eval-step,$namespaces,$primary,(),()), 0)
+    output:serialize(xproc:evalAST($ast-try,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
   }catch *{
-    output:serialize(xproc:evalAST($ast-catch,$xproc:eval-step,$namespaces,$primary,(),()), 0)
+    output:serialize(xproc:evalAST($ast-catch,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
   }
 };
 
@@ -206,7 +204,7 @@ let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultn
 return
 for $item in u:evalXPATH($iteration-select,document{$source})
 return
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step,$namespaces,$item,(),()), 0)
+  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0)
 };
 
 
@@ -248,7 +246,7 @@ let $template := <xsl:stylesheet version="2.0">
 let $data := (u:transform($template,$source))
 let $results := (for $item at $count in $data/*
 return
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step,$namespaces,$item,(),()), 0)
+  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0)
 )
 
 let $final-template := <xsl:stylesheet version="2.0">
@@ -286,6 +284,7 @@ return
  (: -------------------------------------------------------------------------- :)
 () 
  };
+
 
  (:~ generates a sequence of xs:string containing step names
  :
@@ -549,21 +548,6 @@ let $result :=  $data (: u:evalXPATH(string($pinput/@select),$data) :)
 };
 
 
- (:~
-  : DEPRECATE - REPLACE WITH u:enum-ns ... lists all namespaces which are declared and in use within pipeline 
-  : @TODO possibly move to util.xqm and delineate between declared and in use
-  :
-  : @param $pipeline - returns all in use namespaces
-
-  : @returns <namespace/> element
-  :)
- (: ------------------------------------------------------------------------------------------------------------- :)
- declare function xproc:enum-namespaces($pipeline) as element(namespace){
- (: ------------------------------------------------------------------------------------------------------------- :)
-    <namespace name="{$pipeline/@name}">{u:enum-ns(<dummy>{$pipeline}</dummy>)}</namespace>
- };
-
-
  (:~ evaluates an xproc step
   :
   : @param $step - step's xproc:default-name
@@ -641,15 +625,14 @@ return
 
 
  (:~
-  : runtime processing wrapper for xproc:stepFoldEngine 
-  : @TODO - may push this down back to xproc:run
+  :  for xproc:stepFoldEngine 
   :
   : This level of abstraction is probably temporary
   :
   : @param $ast - abstract syntax tree representing pipeline
-  : @param $evalstep - function for evaluating each step (allows for flexible processing)
+  : @param $evalstep - function for evaluating each step is chosen at runtime
   : @param $namespaces - all namespaces that are used within pipeline
-  : @param $stdin - standard input into the pipeline
+  : @param $stdin - standard input 
   : @param $bindings - declared port bindings
   : @param $outputs - starting outputs, used for ext:xproc and branching pipelines
   :
@@ -658,13 +641,14 @@ return
  (: ------------------------------------------------------------------------------------------------------------- :)
  declare function xproc:evalAST(
    $ast as element(p:declare-step),
-   $evalstep,
+   $evalstep as function(*),
    $namespaces as element(namespace),
    $stdin as item()* ,
-   $bindings,
+   $bindings as item()?,
    $outputs as item()?
- ) as item()* {
-   let $steps := xproc:genstepnames( $ast )
+) as item()*
+{
+   let $steps := xproc:genstepnames($ast)
    let $pipeline-name := $ast/@xproc:default-name
    let $_ := u:putInputMap($ast/@xproc:default-name,$stdin)
    return
@@ -692,12 +676,19 @@ return
   : @returns item()*
   :)
  (: ------------------------------------------------------------------------------------------------------------- :)
- declare function xproc:run($pipeline,$stdin as item()*,$bindings,$options,$outputs,$dflag as xs:integer ,$tflag as xs:integer) as item()*{
- (: ------------------------------------------------------------------------------------------------------------- :)
+declare function xproc:run(
+    $pipeline,
+    $stdin as item()*,
+    $bindings,
+    $options,
+    $outputs,
+    $dflag as xs:integer,
+    $tflag as xs:integer
+    ) as item()*
+{
  let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
  let $namespaces := xproc:enum-namespaces($pipeline)
  let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
- let $b          := $parse/*
  let $ast        := element p:declare-step {$parse/@*,
    $parse/namespace::*,
    namespace p {"http://www.w3.org/ns/xproc"},
@@ -707,11 +698,29 @@ return
    namespace c {"http://www.w3.org/ns/xproc-step"},
    namespace xprocerr {"http://www.w3.org/ns/xproc-error"},
    namespace xxq-error {"http://xproc.net/xproc/error"},
-   parse:pipeline-step-sort( $b,  element p:declare-step {$parse/@*[name(.) ne 'xproc:default-name'],  attribute xproc:default-name{$const:init_unique_id} } )
+   parse:pipeline-step-sort( $parse/*,  element p:declare-step {$parse/@*[name(.) ne 'xproc:default-name'],  attribute xproc:default-name{$const:init_unique_id} } )
  }
- let $checkAST          := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
- let $eval_result       := xproc:evalAST($ast,$xproc:eval-step,$namespaces,$stdin,$bindings,())
- let $serialized_result := output:serialize($eval_result,$dflag)
- return $serialized_result
+ let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
+ let $eval_result := xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$stdin,$bindings,())
+ return output:serialize($eval_result,$dflag)
 };
 
+
+
+
+
+
+
+ (:~
+  : DEPRECATE - REPLACE WITH u:enum-ns ... lists all namespaces which are declared and in use within pipeline 
+  : @TODO possibly move to util.xqm and delineate between declared and in use
+  :
+  : @param $pipeline - returns all in use namespaces
+
+  : @returns <namespace/> element
+  :)
+ (: ------------------------------------------------------------------------------------------------------------- :)
+ declare function xproc:enum-namespaces($pipeline) as element(namespace){
+ (: ------------------------------------------------------------------------------------------------------------- :)
+    <namespace name="{$pipeline/@name}">{u:enum-ns(<dummy>{$pipeline}</dummy>)}</namespace>
+ };

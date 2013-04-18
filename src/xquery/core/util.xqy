@@ -1,6 +1,6 @@
 (: ------------------------------------------------------------------------------------- 
  
-	util.xqm - contains most of the XQuery processor specific functions, including all
+	util.xqy - contains most of the XQuery processor specific functions, including all
 	helper functions.
 	
 ---------------------------------------------------------------------------------------- :)
@@ -8,10 +8,9 @@ xquery version "1.0-ml" encoding "UTF-8";
 
 module namespace u = "http://xproc.net/xproc/util";
 
-(:
- declare boundary-space strip;
- declare copy-namespaces no-preserve,no-inherit;
-:)
+declare boundary-space strip;
+declare copy-namespaces no-preserve,no-inherit;
+
 
 (:~ declare namespaces :)
 declare namespace p="http://www.w3.org/ns/xproc";

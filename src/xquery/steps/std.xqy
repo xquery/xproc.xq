@@ -62,7 +62,7 @@ return
 
 <xsl:template match="element()">
   <xsl:copy>
-    <xsl:apply-templates select="@*,node()"/>
+    <xsl:apply-templates select="(attribute()|text()|comment()|processing-instruction())"/>
   </xsl:copy>
 </xsl:template>
        
@@ -153,7 +153,6 @@ declare
 %xproc:step
 function std:delete($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
-(: let $ns := u:enum-ns(<dummy>{$primary}</dummy>) :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 
 let $match  as xs:string := u:get-option('match',$options,$primary)

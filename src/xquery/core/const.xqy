@@ -1,6 +1,6 @@
 (:~ ------------------------------------------------------------------------------------- 
   
-	const.xqm - contains all constants used by xprocxq.
+	const.xqy - contains all constants used by xprocxq.
 	
 ---------------------------------------------------------------------------------------- :)
 xquery version "1.0-ml" encoding "UTF-8";

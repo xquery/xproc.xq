@@ -52,25 +52,26 @@ return
 <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
 
-<xsl:template match="element()">
+<xsl:template match="@*|node()">
   <xsl:copy>
-    <xsl:apply-templates select="element()"/>
+    <xsl:apply-templates select="@*|node()"/>
   </xsl:copy>
 </xsl:template>
-
+    
+    
  <xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}">
   <xsl:copy>
     <xsl:apply-templates select="@*"/>
     <xsl:attribute name="{$attribute-name}" select="'{$attribute-value}'"/>
-    <xsl:apply-templates/>
+    <xsl:apply-templates select="@*|node()"/>
   </xsl:copy>
 </xsl:template>
 
-       
+
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
-  <xsl:copy/>
+   <xsl:copy/>
 </xsl:template>
-       
+    
 </xsl:stylesheet>      
 return
   u:transform($template,$primary)

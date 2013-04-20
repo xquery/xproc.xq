@@ -52,7 +52,7 @@ declare function u:putInputMap(
   $value as item()*
 ){
  let $map := xdmp:get-server-field("xproc:input-map")
- let $_   := map:put( $map, $key, xdmp:quote(  $value ) )
+ let $_   := map:put( $map, $key, $value  )
  return
  xdmp:set-server-field("xproc:input-map",$u:inputMap)
 };
@@ -64,9 +64,9 @@ declare function u:getInputMap(
 {
   let $map := xdmp:get-server-field("xproc:input-map")
   return
-    xdmp:unquote( 
+
         map:get($map,$key)
-     ) 
+
 };
 
 

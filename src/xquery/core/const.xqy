@@ -123,6 +123,8 @@ declare variable $const:xproc-rng-schema := 'resource:net/xproc/xprocxq/etc/xpro
 (: -------------------------------------------------------------------------- :)
 declare variable $const:xslt-output := <xsl:output omit-xml-declaration="yes"/>;
 
+declare variable $const:xslt-version := 2.0;
+
 
 declare variable $const:default-ns as xs:string:='
 

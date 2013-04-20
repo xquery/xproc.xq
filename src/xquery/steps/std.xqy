@@ -44,7 +44,7 @@ let $attribute-name := u:get-option('attribute-name',$options,$primary)
 let $attribute-value := u:get-option('attribute-value',$options,$primary)
 let $attribute-prefix := u:get-option('attribute-prefix',$options,$primary)
 let $attribute-namespace := u:get-option('attribute-namespace',$options,$primary)
-    let $template := <xsl:stylesheet version="2.0">
+    let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 {$const:xslt-output}
 {for $option in $options[@name]
@@ -84,13 +84,9 @@ declare
 function std:add-xml-base($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
-let $template := <xsl:stylesheet version="2.0">
-      {for $n in in-scope-prefixes($primary/*)
-        return
-        namespace {$n} {namespace-uri-for-prefix($n,$primary/*)}
-       }
-{$const:xslt-output}
-
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
+    {std:ns-for-xslt($primary)}
+    {$const:xslt-output}
 <xsl:template match="/">
   <xsl:copy>
     <xsl:attribute name="xml:base" select="base-uri(node())"/>
@@ -158,7 +154,7 @@ function std:delete($primary,$secondary,$options,$variables){
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 
 let $match  as xs:string := u:get-option('match',$options,$primary)
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -166,17 +162,18 @@ let $template := <xsl:stylesheet version="2.0">
 return
 <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
-<xsl:template match="/">
-        <xsl:apply-templates select="@*|node()"/>
-</xsl:template>
 
 <xsl:template match="@*|node()">
-    <xsl:copy>
-        <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
+  <xsl:copy>
+    <xsl:apply-templates select="@*|node()"/>
+  </xsl:copy>
 </xsl:template>
+        
+<xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}"/>
 
-<xsl:template match="{$match}"/>
+<xsl:template match="attribute()|text()|comment()|processing-instruction()">
+   <xsl:copy/>
+</xsl:template>
 
 </xsl:stylesheet>
 return
@@ -337,10 +334,9 @@ declare
 function std:identity($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 
-let $template := <xsl:stylesheet version="2.0"  xmlns:p="http://www.w3.org/ns/xproc">
+let $template := <xsl:stylesheet version="{$const:xslt-version}"  xmlns:p="http://www.w3.org/ns/xproc">
     {std:ns-for-xslt($primary)}
-
-{$const:xslt-output}
+    {$const:xslt-output}
 
 <xsl:template match="@*|node()">
   <xsl:copy>
@@ -365,7 +361,7 @@ let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $insertion := u:getInputMap($secondary/@step || "#insertion") 
 let $match     := u:get-option('match',$options,$primary)
 let $position  := u:get-option('position',$options,$primary)
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
 {std:ns-for-xslt($primary)}
 {$const:xslt-output}
 {for $option in $options[@name]
@@ -444,7 +440,7 @@ let $replace  := u:get-option('replace',$options,$primary)
 let $attribute-prefix  := u:get-option('attribute-prefix',$options,$primary)
 let $attribute-namespace  := u:get-option('attribute-namespace',$options,$primary)
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -514,7 +510,7 @@ let $base-uri := u:get-option('base-uri',$options,$primary)
 let $new-uri  := if ($base-uri) then <xsl:value-of select="resolve-uri('{$base-uri}', base-uri($closest-element))"/>
 else <xsl:value-of select="base-uri($closest-element)"/>
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -606,7 +602,7 @@ let $attribute-template :=   <xsl:template match="@*">
   </xsl:template>
 
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -668,7 +664,7 @@ let $new-name  := u:get-option('new-name',$options,$primary)
 let $new-prefix  := u:get-option('new-prefix',$options,$primary)
 let $new-namespace  := u:get-option('new-namespace',$options,$primary)
 
-let $template := <xsl:stylesheet version="2.0" xmlns:p="http://www.w3.org/ns/xproc">
+let $template := <xsl:stylesheet version="{$const:xslt-version}" xmlns:p="http://www.w3.org/ns/xproc">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -723,7 +719,7 @@ let $replacement :=  u:getInputMap($secondary/@step || "#replacement")
 
 let $match  := u:get-option('match',$options,$primary)
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -774,7 +770,7 @@ return
 
 let $match  := u:get-option('match',$options,$primary)
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -870,7 +866,7 @@ let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-string-option('match',$options,$primary)
 let $replace as xs:string := u:get-string-option('replace',$options,$primary) 
 
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
 
 
@@ -955,7 +951,7 @@ let $wrapper-prefix as xs:string := u:get-option('wrapper-prefix',$options,$prim
 let $wrapper-namespace as xs:string := u:get-option('wrapper-namespace',$options,$primary)
 let $group-adjacent as xs:string := u:get-option('group-adjacent',$options,$primary)
 
-let $template := <xsl:stylesheet version="2.0"  xmlns:p="http://www.w3.org/ns/xproc">
+let $template := <xsl:stylesheet version="{$const:xslt-version}"  xmlns:p="http://www.w3.org/ns/xproc">
     {std:ns-for-xslt($primary)}
 
 {$const:xslt-output}
@@ -1013,7 +1009,7 @@ function std:unwrap($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 
 let $match  := u:get-option('match',$options,$primary)
-let $template := <xsl:stylesheet version="2.0">
+let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary)}
     {$const:xslt-output}
 {for $option in $options[@name]
@@ -1039,6 +1035,7 @@ return
 return
   u:transform($template,$primary)
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare

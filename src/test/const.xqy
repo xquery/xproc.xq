@@ -42,5 +42,9 @@ declare function test:checkPsviSupported() {
   assert:equal($const:psvi-supported, 'false')
 };
 
+declare function test:checkXSLTVersion() { 
+  assert:equal($const:xslt-version, 2.0)
+};
+
 (: missing tests for error codes :)
 

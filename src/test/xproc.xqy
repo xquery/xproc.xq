@@ -767,9 +767,6 @@ declare function  test:runDelete1() {
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
     return
       assert:equal($result,<pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
-	<delete>
-	  <option name="target" value="delete"></option>
-	</delete>
       </pipeline>)    
 };
 

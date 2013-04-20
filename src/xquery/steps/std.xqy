@@ -40,7 +40,7 @@ function std:add-attribute($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns := u:get-secondary('xproc:namespaces',$secondary)/*
 let $match  := u:get-option('match',$options,$primary)
-let $attribute-name as xs:string := u:get-option('attribute-name',$options,$primary)
+let $attribute-name := u:get-option('attribute-name',$options,$primary)
 let $attribute-value := u:get-option('attribute-value',$options,$primary)
 let $attribute-prefix := u:get-option('attribute-prefix',$options,$primary)
 let $attribute-namespace := u:get-option('attribute-namespace',$options,$primary)
@@ -52,7 +52,13 @@ return
 <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
 
-<xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}">
+<xsl:template match="element()">
+  <xsl:copy>
+    <xsl:apply-templates select="element()"/>
+  </xsl:copy>
+</xsl:template>
+
+ <xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}">
   <xsl:copy>
     <xsl:apply-templates select="@*"/>
     <xsl:attribute name="{$attribute-name}" select="'{$attribute-value}'"/>
@@ -60,11 +66,6 @@ return
   </xsl:copy>
 </xsl:template>
 
-<xsl:template match="element()">
-  <xsl:copy>
-    <xsl:apply-templates select="(attribute()|text()|comment()|processing-instruction())"/>
-  </xsl:copy>
-</xsl:template>
        
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
   <xsl:copy/>

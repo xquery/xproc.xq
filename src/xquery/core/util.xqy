@@ -52,7 +52,7 @@ declare function u:putInputMap(
   $value as item()*
 ){
  let $map := xdmp:get-server-field("xproc:input-map")
- let $_   := map:put( $map, $key, $value)
+ let $_   := map:put( $map, $key, xdmp:quote(  $value ) )
  return
  xdmp:set-server-field("xproc:input-map",$u:inputMap)
 };
@@ -64,7 +64,9 @@ declare function u:getInputMap(
 {
   let $map := xdmp:get-server-field("xproc:input-map")
   return
-  map:get( $map, $key )
+    xdmp:unquote( 
+        map:get($map,$key)
+     ) 
 };
 
 
@@ -197,11 +199,7 @@ declare function u:xquery($query, $xml){
  let $context := document{$xml}       
  let $compile  :=  concat($const:default-ns,string($query))
  return
-   $xml/xdmp:value( normalize-space($query) ) 
-
-(:   
-   u:evalPath(normalize-space($query),document{$xml})
-:)
+      if (string-length($query) lt 2) then u:xprocxqError("EMPTY-INPUT","required query input is empty") else $xml/xdmp:value( normalize-space($query) ) 
 };
 
 
@@ -303,11 +301,11 @@ else
 
 
 (: -------------------------------------------------------------------------- :)
-declare function u:xprocxqError($error,$string) {
+declare function u:xprocxqError($code,$string) {
 (: -------------------------------------------------------------------------- :)
-let $info := $const:xprocxq-error//xxq-error:error[@code=substring-after($error,':')]
+let $info := $const:xprocxq-error//xxq-error:error[@code=substring-after($code,':')]
     return
-        error(QName('http://xproc.net/xproc/error',$error),concat($error,": xprocxq error - ",$string," ",$info/text(),'&#10;'))};
+        error(QName('http://xproc.net/xproc/error',$code),concat("xprocxq error - ",$string," ",$info/text()))};
 
 
 

@@ -651,6 +651,40 @@ declare function  test:runCompare2() {
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">true</c:result>)    
 };
 
+
+declare function  test:runCompare3() { 
+  let $pipeline := <p:pipeline version='1.0' name="main"
+	    xmlns:p="http://www.w3.org/ns/xproc">
+  <p:input port="source" primary="true"/>
+  <p:input port="alternate" primary="false">
+    <p:inline>
+      <c>here2<a/></c>
+    </p:inline>
+  </p:input>
+
+  <p:output port="result" primary="true"/>
+
+  <p:compare name="compare">
+    <p:input port="source">
+      <p:pipe step="main" port="source"/>
+    </p:input>
+    <p:input port="alternate">
+      <p:pipe step="main" port="alternate"/>
+    </p:input>
+  </p:compare>
+</p:pipeline>
+
+  let $stdin    := <c>here1<a/></c>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+    return
+      assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">false</c:result>)    
+};
+
 declare function  test:runCount1() { 
   let $pipeline :=   <p:declare-step version='1.0'>
     <p:input port="source" sequence="true"/>

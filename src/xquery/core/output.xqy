@@ -34,11 +34,39 @@ declare function output:serialize(
           element xproc:pipeline {$ast},
           element xproc:outputs {$u:inputMap}
         }
+    else u:getInputMap('!1!')
+ };
+
+(:~ output:seriaize - serializes output 
+ :
+ : @param $result - all outputs from the result of processing pipeline
+ :                  $result[1] - abstract tree
+ :                  $result[2...n] - result
+ :
+ : @param $dflag - if true will output full processing trace
+ :
+ : @returns item()* 
+ :)
+(: -------------------------------------------------------------------------- :)
+declare function output:serialize(
+    $result as item()*,
+    $dflag as xs:integer,
+    $level as xs:integer
+    ) as item()*
+{
+
+ let $ast :=subsequence($result,1,1)
+ return
+    if($dflag eq 1) then
+        element xproc:debug{
+          element xproc:pipeline {$ast},
+          element xproc:outputs {$u:inputMap}
+        }
     else
         let $map  := xdmp:get-server-field("xproc:input-map")
         let $keys :=  for $key in map:keys($map)
         return
           if (ends-with(string($key),'!') ) then string($key)
           else () 
-    return u:getInputMap($keys[1])
+    return u:getInputMap($keys[last()])
  };

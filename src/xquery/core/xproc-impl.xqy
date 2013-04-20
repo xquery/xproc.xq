@@ -55,7 +55,7 @@ return $xproc:run-step($pipeline,$primary,$bindings,$options,(),$dflag ,$tflag)
 };
 
 
- (:~ 
+(:~ 
  :
  : @param $sorted -
  :
@@ -94,7 +94,7 @@ let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultn
 return
   output:serialize(
    xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$primary,(),())
-   ,0)
+   ,0,1)
 };
 
 
@@ -136,13 +136,13 @@ return
     let $ast-when := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}"><p:input port="source"/>
 <p:output port="result"/>{$when-sorted}{xproc:genExtPost($when-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-when,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
+      output:serialize(xproc:evalAST($ast-when,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
   else
     let $otherwise-sorted :=  parse:pipeline-step-sort( $currentstep/p:otherwise/node()  , () )
     let $ast-otherwise := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" ><p:input port="source"/>
 <p:output port="result"/>{$otherwise-sorted}{xproc:genExtPost($otherwise-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-otherwise,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
+      output:serialize(xproc:evalAST($ast-otherwise,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
 
 };
 
@@ -168,9 +168,9 @@ let $ast-catch := <p:declare-step name="{$defaultname}" xproc:default-name="{$de
 
 return
   try{
-    output:serialize(xproc:evalAST($ast-try,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
+    output:serialize(xproc:evalAST($ast-try,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
   }catch *{
-    output:serialize(xproc:evalAST($ast-catch,$xproc:eval-step-func,$namespaces,$primary,(),()), 0)
+    output:serialize(xproc:evalAST($ast-catch,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
   }
 };
 
@@ -199,12 +199,14 @@ else
   $primary
 let $sorted := parse:pipeline-step-sort($currentstep/node(),())  
 let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" ><p:input port="source"/>
-<p:output port="result"/>{$sorted}
+<p:output port="result"/>{$sorted}   
 </p:declare-step>
-return
+
+let $result :=     
 for $item in u:evalXPATH($iteration-select,document{$source})
-return
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0)
+return    
+  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
+return $result    
 };
 
 
@@ -246,7 +248,7 @@ let $template := <xsl:stylesheet version="2.0">
 let $data := (u:transform($template,$source))
 let $results := (for $item at $count in $data/*
 return
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0)
+  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0,1)
 )
 
 let $final-template := <xsl:stylesheet version="2.0">

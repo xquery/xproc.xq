@@ -102,8 +102,7 @@ declare
 function opt:xquery($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $query := u:getInputMap($secondary/@step || "#query") 
-return
-      u:xquery($query/text(),$primary,$options[@name])
+return u:xquery($query/text(),$primary,$options[@name])
 };
 
 

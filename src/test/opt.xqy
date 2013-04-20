@@ -1,11 +1,13 @@
-xquery version "3.0";
+xquery version "1.0-ml";
 
 module namespace test = "http://github.com/robwhitby/xray/test";
 
 import module namespace assert = "http://github.com/robwhitby/xray/assertions" at "/xray/src/assertions.xqy";
          
 import module namespace opt = "http://xproc.net/xproc/opt" at "/xquery/steps/opt.xqy";
-    
+
+declare namespace error="http://marklogic.com/xdmp/error";
+
 declare function test:loadModuleTest() { 
   let $actual := <test/>
   return
@@ -48,10 +50,10 @@ declare function  test:validate() {
     assert:equal($actual,())
 };
 
-declare function  test:xquery() { 
-  let $actual := opt:xquery(<test/>,(),(),())
+declare function  test:xquery1() {
+  let $actual := try { opt:xquery(<test/>,(),(),()) } catch ($ex) { $ex }
   return
-    assert:equal($actual,())
+    assert:error($actual,"xprocxq error - required query input is empty ")
 };
 
 declare function  test:xsl-formatter() { 

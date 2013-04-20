@@ -31,7 +31,9 @@ return
 <test-result pass="{$compare}"></test-result>
 
 }catch($e){
-$e
+if($test/@error) then
+    <test-result pass="{$test/@error eq $e/error:name}"></test-result>
+else $e        
 }
 
 

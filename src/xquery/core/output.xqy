@@ -41,7 +41,7 @@ declare function output:serialize(
             {u:getInputMap($key) }
             </entry>}
         }
-    else u:getInputMap('!1!#result')
+    else u:getInputMap($const:final_id)
  };
 
 (:~ output:seriaize - serializes output 

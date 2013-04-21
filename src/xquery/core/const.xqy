@@ -3,9 +3,11 @@
 	const.xqy - contains all constants used by xprocxq.
 	
 ---------------------------------------------------------------------------------------- :)
-xquery version "1.0-ml" encoding "UTF-8";
+xquery version "3.0" encoding "UTF-8";
 
 module namespace const = "http://xproc.net/xproc/const";
+
+import module namespace u="http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
 
 (: -------------------------------------------------------------------------- :)
 (:~ XProc Namespace Declaration :)
@@ -43,54 +45,36 @@ declare variable $const:ESCAPE_SERIALIZE   := 'method=xml indent=no';
 declare variable $const:NS_XPROC_EXT     := "http://xproc.net/ns/xproc/ex";
 declare variable $const:NS_XPROC_ERR_EXT := "http://xproc.net/ns/errors";
 
-declare variable $const:module_root as xs:string := xdmp:modules-root();
+declare variable $const:module_root as xs:string := u:modules-root();
 
 (: -------------------------------------------------------------------------- :)
 (:~ Error Dictionary lookup :) (:~ @TODO - obviously need to remove these absolute paths :)
 (: -------------------------------------------------------------------------- :)
-declare variable $const:error :=  xdmp:document-get( $const:module_root || "xquery/etc/error-codes.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>);
+declare variable $const:error :=  u:document-get("xquery/etc/error-codes.xml");
        
-declare variable  $const:xprocxq-error  := xdmp:document-get( $const:module_root || "xquery/etc/xproc-error-codes.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>);
+declare variable  $const:xprocxq-error  := u:document-get("xquery/etc/xproc-error-codes.xml");
 
 (: -------------------------------------------------------------------------- :)
 (:~ Step Definition lookup :) (:~ @TODO - obviously need to remove these absolute paths :)
 (: -------------------------------------------------------------------------- :)
-declare variable $const:ext-steps  := xdmp:document-get( $const:module_root || "xquery/etc/pipeline-extension.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>)/p:library; 
-declare variable $const:std-steps  := xdmp:document-get($const:module_root || "xquery/etc/pipeline-standard.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>)/p:library; 
-declare variable $const:opt-steps  := xdmp:document-get( $const:module_root || "xquery/etc/pipeline-optional.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>)/p:library; 
-declare variable $const:comp-steps := xdmp:document-get( $const:module_root || "xquery/etc/xproc-component.xml",<options xmlns="xdmp:document-get">
-           <repair>full</repair>
-           <format>xml</format>
-       </options>)/xproc:components;
+declare variable $const:ext-steps  := u:document-get("xquery/etc/pipeline-extension.xml")/p:library; 
+declare variable $const:std-steps  := u:document-get("xquery/etc/pipeline-standard.xml")/p:library; 
+declare variable $const:opt-steps  := u:document-get("xquery/etc/pipeline-optional.xml")/p:library; 
+declare variable $const:comp-steps := u:document-get("xquery/etc/xproc-component.xml")/xproc:components;
 
 
 (: -------------------------------------------------------------------------- :)
 (:~ System Property :)
 (: -------------------------------------------------------------------------- :)
-declare variable $const:version :="0.9";
-declare variable $const:product-version :="0.9";
-declare variable $const:product-name :="xprocxq";
+declare variable $const:version :="1.0";
+declare variable $const:product-version :="1.0";
+declare variable $const:product-name :="xproc.xq";
 declare variable $const:vendor :="James Fuller";
 declare variable $const:language :="en";
 declare variable $const:vendor-uri :="http://www.xproc.net";
 declare variable $const:xpath-version :="2.0";
 declare variable $const:psvi-supported :="false";
-declare variable $const:episode :="somerandomnumber";
+declare variable $const:episode := u:random(100000);
 
 
 (: -------------------------------------------------------------------------- :)
@@ -102,6 +86,7 @@ declare variable $const:NDEBUG :=1;
 (:~ XProc default naming prefix :)
 (: -------------------------------------------------------------------------- :)
 declare variable $const:init_unique_id :="!1";
+declare variable $const:final_id :="!1!#result";
 
 (: -------------------------------------------------------------------------- :)
 (:~ Mime types :)

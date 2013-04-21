@@ -30,7 +30,6 @@ import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-
 (:~ set to 1 to enable debugging :)
 declare variable $u:NDEBUG := $const:NDEBUG;
 
@@ -39,6 +38,17 @@ declare variable $u:inputMap as map:map := map:map();
 (: -------------------------------------------------------------------------- :)
 (:~ Processor Specific                                                         :)
 (: -------------------------------------------------------------------------- :)
+
+declare function u:document-get($path){
+xdmp:document-get( $const:module_root || $path,<options xmlns="xdmp:document-get">
+           <repair>full</repair>
+           <format>xml</format>
+       </options>)
+};
+
+declare function u:modules-root(){
+    xdmp:modules-root()
+};    
 
 declare function u:value($primary,$test){
     $primary/xdmp:value( $test) 

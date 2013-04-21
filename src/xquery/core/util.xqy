@@ -310,7 +310,7 @@ return
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function u:get-option($option-name as xs:string,$options as element(xproc:options),$primary) as xs:string{
+declare function u:get-option($option-name as xs:string,$options as element(xproc:options)?,$primary) as xs:string{
 (: -------------------------------------------------------------------------- :)
 let $xpath as xs:string := string($options//p:with-option[@name eq $option-name]/@select)
 return

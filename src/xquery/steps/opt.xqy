@@ -126,10 +126,10 @@ declare
 %xproc:step
 function opt:zip($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
-let $href  :=   u:get-option('href',$options,$primary)
-let $command  := u:get-option('command',$options,$primary)
+let $href             := u:get-option('href',$options,$primary)
+let $command          := u:get-option('command',$options,$primary)
 let $return-manifest  := u:get-option('return-manifest',$options,$primary)
-let $opts  := u:get-option('options',$options,$primary)
+let $opts             := u:get-option('options',$options,$primary)
 return
     <c:result href="{$href}" command="{$command}" return-manifest="{$return-manifest}" options="{$opts}"></c:result>
 };

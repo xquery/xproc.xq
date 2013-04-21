@@ -65,7 +65,7 @@ declare function  test:xsl-formatter() {
 declare function  test:zip() { 
   let $actual := opt:zip(<test/>,(),(),())
   return
-    assert:equal($actual,())
+    assert:equal($actual,    <c:result href="" command="" return-manifest="" options="" xmlns:c="http://www.w3.org/ns/xproc-step"></c:result>)
 };
 
 declare function  test:unzip() { 

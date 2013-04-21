@@ -1,4 +1,4 @@
-xquery version "1.0-ml"  encoding "UTF-8";
+xquery version "3.0"  encoding "UTF-8";
 
 module namespace output = "http://xproc.net/xproc/output";
 
@@ -7,6 +7,7 @@ import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/cor
 
 (:~ declare namespaces :)
 declare namespace xproc = "http://xproc.net/xproc";
+declare namespace map ="http://marklogic.com/xdmp/map";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -32,9 +33,15 @@ declare function output:serialize(
     if($dflag eq 1) then
         element xproc:debug{
           element xproc:pipeline {$ast},
-          element xproc:outputs {$u:inputMap}
+          element xproc:outputs {
+            for $key in map:keys( $u:inputMap)
+            order by $key
+            return
+            <entry key="{$key}">
+            {u:getInputMap($key) }
+            </entry>}
         }
-    else u:getInputMap('!1!')
+    else u:getInputMap('!1!#result')
  };
 
 (:~ output:seriaize - serializes output 
@@ -63,10 +70,10 @@ declare function output:serialize(
           element xproc:outputs {$u:inputMap}
         }
     else
-        let $map  := xdmp:get-server-field("xproc:input-map")
+        let $map  := u:get-server-field("xproc:input-map")
         let $keys :=  for $key in map:keys($map)
         return
-          if (ends-with(string($key),'!') ) then string($key)
+          if (ends-with(string($key),'!#result') ) then string($key)
           else () 
     return u:getInputMap($keys[last()])
  };

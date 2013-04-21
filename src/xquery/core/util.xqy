@@ -40,19 +40,26 @@ declare variable $u:inputMap as map:map := map:map();
 (:~ Processor Specific                                                         :)
 (: -------------------------------------------------------------------------- :)
 
+declare function u:value($primary,$test){
+    $primary/xdmp:value( $test) 
+};
+
 declare function u:random(
   $seed as xs:integer
 ){
  xdmp:random($seed)
 };
 
+declare function u:get-server-field($field){
+    xdmp:get-server-field($field)
+};
 
 declare function u:putInputMap(
   $key as xs:string,
   $value as item()*
 ){
  let $map := xdmp:get-server-field("xproc:input-map")
- let $_   := map:put( $map, $key, $value  )
+ let $_   := map:put( $map, $key,  $value  )
  return
  xdmp:set-server-field("xproc:input-map",$u:inputMap)
 };
@@ -64,7 +71,6 @@ declare function u:getInputMap(
 {
   let $map := xdmp:get-server-field("xproc:input-map")
   return
-
         map:get($map,$key)
 
 };

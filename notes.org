@@ -2,12 +2,14 @@
 *** spec: http://www.w3.org/TR/xproc/
 *** old xprocxq docs: http://exist.sourceforge.net/xproc/xproc.html
 *** tests.xproc.org: http://tests.xproc.org/ 
-* plan
-*** 
-*** implement all std, xproc, ext, opt steps
-*** hookup w3c test suite
-*** library
 * current
+*** push all processor specific
+***** xproc-impl - just namespaces
+***** parse.xqy - just namespaces
+***** const - some minor stuff
+* tasks
+*** library
+*** declare-step
 *** p:http
 *** check p:with-option is encapsulating select string value correctly
 *** check xpath-context,viewport-source, iteration-source
@@ -28,17 +30,10 @@
     string p:resolve-uri(String relative)
     string p:resolve-uri(String relative, String base)
 
-*** implement params & options
-*** serialization
 *** error assertions
-*** p:library
-*** parameters
-*** review p:declare-step
 * test tasks
-*** testrunner for tests.xproc.org
 *** be able to run a single test
 *** testrunner for xprocxq specific tests
-*** be able to run a single test
 *** xml calabash ?
 ***** compare output
 *** setup build system ?
@@ -71,8 +66,6 @@
 ***** std.xqm: required steps as defined by spec 
 ***** opt.xqm: optional steps as defined by spec
 ***** ext.xqm: extension steps specific to xprocxq
-*** deps
-***** saxon initially to use first class functions
 * notes
 *** try to keep all processor specific functionality within util.xqm
 *** build system should create vendor specific
@@ -88,7 +81,9 @@
 
 * 
   ;; don't delete these lines
-  saved org fold info: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 16 17 18 19 20 21 22 23 24 25 26 28)
+  saved org fold info: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 18 19 20 21 23 24 25 26 27 28 29 30 34 35 36 38 39 42)
+
+
 
 
 

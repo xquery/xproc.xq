@@ -11,15 +11,15 @@ declare function test:loadModule() {
 };
 
 declare function test:checkVersion() { 
-  assert:equal($const:version, '0.9')
+  assert:equal($const:version, '1.0')
 };
 
 declare function test:checkProductVersion() { 
-  assert:equal($const:product-version, '0.9')
+  assert:equal($const:product-version, '1.0')
 };
 
 declare function test:checkProductVersioName() { 
-  assert:equal($const:product-name, 'xprocxq')
+  assert:equal($const:product-name, 'xproc.xq')
 };
 
 declare function test:checkVendor() { 

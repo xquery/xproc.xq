@@ -442,7 +442,7 @@ declare function  test:runIdentity() {
 
 </p:declare-step>
 
-  let $stdin    := (<test/>)
+  let $stdin    := ()
   let $dflag    := 0
   let $tflag    := 0
   let $bindings := ()
@@ -450,7 +450,7 @@ declare function  test:runIdentity() {
   let $outputs  := ()
  let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
   return
-     assert:equal($result,document{      <foo xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns=""></foo>})
+     assert:equal($result,document{<test/>})
 };
 
 

@@ -1,4 +1,24 @@
-xquery version "1.0-ml"  encoding "UTF-8";
+(:
+: Licensed under the Apache License, Version 2.0 (the "License");
+: you may not use this file except in compliance with the License.
+: You may obtain a copy of the License at
+:
+: http://www.apache.org/licenses/LICENSE-2.0
+:
+: Unless required by applicable law or agreed to in writing, software
+: distributed under the License is distributed on an "AS IS" BASIS,
+: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+: See the License for the specific language governing permissions and
+: limitations under the License.
+:)
+
+xquery version "3.0"  encoding "UTF-8";
+
+(: -------------------------------------------------------------------------------------
+
+    xproc-impl.xqy - 
+
+ ---------------------------------------------------------------------------------------- :)
 
 module namespace xproc = "http://xproc.net/xproc";
 
@@ -25,6 +45,7 @@ declare copy-namespaces preserve,no-inherit;
 
  (:~ declare steps :)
  declare variable $xproc:xproc-run       := xproc:xproc-run#4;
+ declare variable $xproc:run-step        := xproc:run#7;
  declare variable $xproc:eval-step-func  := xproc:evalstep#4;
  declare variable $xproc:declare-step    := ();
  declare variable $xproc:library         := ();
@@ -669,6 +690,7 @@ declare function xproc:run(
  let $namespaces := xproc:enum-namespaces($pipeline)
  let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
  let $ast        := element p:declare-step {$parse/@*,
+   u:ns-axis($parse),  
    namespace p {"http://www.w3.org/ns/xproc"},
    namespace xproc {"http://xproc.net/xproc"},
    namespace ext {"http://xproc.net/xproc/ext"},

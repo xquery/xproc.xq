@@ -1,10 +1,26 @@
+(:
+: Licensed under the Apache License, Version 2.0 (the "License");
+: you may not use this file except in compliance with the License.
+: You may obtain a copy of the License at
+:
+: http://www.apache.org/licenses/LICENSE-2.0
+:
+: Unless required by applicable law or agreed to in writing, software
+: distributed under the License is distributed on an "AS IS" BASIS,
+: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+: See the License for the specific language governing permissions and
+: limitations under the License.
+:)
+
+xquery version "1.0-ml" encoding "UTF-8";
+
+
 (: ------------------------------------------------------------------------------------- 
  
 	util.xqy - contains most of the XQuery processor specific functions, including all
 	helper functions.
 	
 ---------------------------------------------------------------------------------------- :)
-xquery version "1.0-ml" encoding "UTF-8";
 
 module namespace u = "http://xproc.net/xproc/util";
 
@@ -38,6 +54,10 @@ declare variable $u:inputMap as map:map := map:map();
 (: -------------------------------------------------------------------------- :)
 (:~ Processor Specific                                                         :)
 (: -------------------------------------------------------------------------- :)
+
+declare function u:ns-axis($el){
+    $el/namespace::*
+};
 
 declare function u:document-get($path){
 xdmp:document-get( $const:module_root || $path,<options xmlns="xdmp:document-get">

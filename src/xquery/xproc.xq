@@ -10,7 +10,7 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
  (:~
-  : entry point into xprocxq returning the final serialized output of pipeline processing
+  : simplified entry point into xproc.xq returning the final serialized output of pipeline processing
   :
   : @param $pipeline - xproc pipeline
   : @param $stdin - externally defined standard input
@@ -31,7 +31,7 @@ declare function xprocxq:xq(
 };
 
  (:~
-  : entry point into xprocxq returning the final serialized output of pipeline processing
+  : entry point into xproc.xq returning the final serialized output of pipeline processing
   :
   : @param $pipeline - xproc pipeline
   : @param $stdin - externally defined standard input
@@ -55,7 +55,3 @@ declare function xprocxq:xq(
 {
  xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)   
 };
-
-
-
-

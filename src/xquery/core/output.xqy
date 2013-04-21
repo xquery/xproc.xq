@@ -44,7 +44,9 @@ declare function output:serialize(
     else u:getInputMap($const:final_id)
  };
 
-(:~ output:seriaize - serializes output 
+(:~ output:seriaize - serializes output from xproc component steps
+ :
+ :  group, for-each, try/catch, viewport, choose
  :
  : @param $result - all outputs from the result of processing pipeline
  :                  $result[1] - abstract tree

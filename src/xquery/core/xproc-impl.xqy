@@ -32,6 +32,10 @@ declare copy-namespaces preserve,no-inherit;
  declare variable $xproc:variable        := ();
 
 
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+ (: COMPONENT STEPS                                                                                                                                        :)   
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+
  (:~ xproc:xproc-run impl for ext:xproc extension step
  :
  : @param $primary -
@@ -42,7 +46,9 @@ s :
  : @returns 
  :)
 (: -------------------------------------------------------------------------- :)
-declare function xproc:xproc-run($primary,$secondary,$options,$currentstep) {
+declare
+%xproc:step
+function xproc:xproc-run($primary,$secondary,$options,$currentstep) {
 (: -------------------------------------------------------------------------- :)
 let $pipeline := u:get-secondary('pipeline',$secondary)/*
 let $bindings := u:get-secondary('binding',$secondary)/*
@@ -63,7 +69,9 @@ return xproc:run($pipeline,$primary,$bindings,$options,(),$dflag ,$tflag)
  : @returns 
  :)
 (: -------------------------------------------------------------------------- :)
-declare function xproc:group($primary,$secondary,$options,$currentstep) {
+declare
+%xproc:step
+function xproc:group($primary,$secondary,$options,$currentstep) {
 (: -------------------------------------------------------------------------- :)
 let $namespaces  := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
@@ -270,6 +278,10 @@ return
   u:transform($final-template,$source)
 
 };
+
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+ (: PROCESSOR                                                                                                                                              :)
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
 
 
  (:~ resolve external bindings
@@ -625,6 +637,10 @@ return
  };
 
  
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+ (: INTERNAL ENTRY POINT                                                                                                                                   :)
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+
  (:~
   : entry point into xprocxq returning the final serialized output of pipeline processing
   :
@@ -669,7 +685,9 @@ declare function xproc:run(
 
 
 
-
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
+ (: DEPRECATION ?                                                                                                                                          :)
+ (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
 
 (:~ migrate to parse ? 
  :

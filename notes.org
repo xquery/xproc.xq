@@ -3,10 +3,13 @@
 *** old xprocxq docs: http://exist.sourceforge.net/xproc/xproc.html
 *** tests.xproc.org: http://tests.xproc.org/ 
 * current
-*** push all processor specific
+*** processor specific conversion (push everything to util.xqy)
 ***** xproc-impl - just namespaces
 ***** parse.xqy - just namespaces
-***** const - some minor stuff
+*** initial timing and performance breakdown
+***** loading AST and assets = 10%
+***** parse = 30% total
+***** execution = 60% total
 * tasks
 *** library
 *** declare-step
@@ -67,7 +70,6 @@
 ***** opt.xqm: optional steps as defined by spec
 ***** ext.xqm: extension steps specific to xprocxq
 * notes
-*** try to keep all processor specific functionality within util.xqm
 *** build system should create vendor specific
 ***** marklogic
 ***** saxon
@@ -81,9 +83,5 @@
 
 * 
   ;; don't delete these lines
-  saved org fold info: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 18 19 20 21 23 24 25 26 27 28 29 30 34 35 36 38 39 42)
-
-
-
-
+  saved org fold info: (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 21 22 23 24 26 27 28 29 30 31 32 35 36 37 39 40 41 42 43 44 45)
 

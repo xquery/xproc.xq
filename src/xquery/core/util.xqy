@@ -14,7 +14,6 @@
 
 xquery version "1.0-ml" encoding "UTF-8";
 
-
 (: ------------------------------------------------------------------------------------- 
  
 	util.xqy - contains most of the XQuery processor specific functions, including all
@@ -27,8 +26,6 @@ module namespace u = "http://xproc.net/xproc/util";
 declare boundary-space strip;
 declare copy-namespaces no-preserve,no-inherit;
 
-
-(:~ declare namespaces :)
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
@@ -41,7 +38,6 @@ declare namespace xxq-error = "http://xproc.net/xproc/error";
 
 declare namespace saxon ="http://test.org/saxon";
 
-(:~ Module Imports :)
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";

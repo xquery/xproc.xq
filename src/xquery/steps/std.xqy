@@ -25,14 +25,12 @@ module namespace std = "http://xproc.net/xproc/std";
 declare boundary-space strip;
 declare copy-namespaces preserve,no-inherit;
 
-(: declare namespaces :)
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 
-(: module imports :)
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
 
@@ -40,7 +38,6 @@ declare namespace http = "http://www.expath.org/mod/http-client";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-(: declare functions :)
 
 declare function std:ns-for-xslt($primary){
  (     (namespace {"xproc"} {"http://xproc.net/xproc"},
@@ -188,13 +185,13 @@ return
 <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
 
+<xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}"/>
+
 <xsl:template match="@*|node()">
   <xsl:copy>
     <xsl:apply-templates select="@*|node()"/>
   </xsl:copy>
 </xsl:template>
-        
-<xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}"/>
 
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
    <xsl:copy/>
@@ -202,7 +199,7 @@ return
 
 </xsl:stylesheet>
 return
-  u:transform($template,$primary)
+  u:transform($template,$primary) 
 };
 
 

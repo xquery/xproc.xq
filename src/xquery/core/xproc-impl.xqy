@@ -25,32 +25,28 @@ module namespace xproc = "http://xproc.net/xproc";
 declare boundary-space strip;
 declare copy-namespaces preserve,no-inherit;
 
- (:~ declare namespaces :)
- declare namespace c="http://www.w3.org/ns/xproc-step";
- declare namespace xprocerr="http://www.w3.org/ns/xproc-error";
- declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
+declare namespace c="http://www.w3.org/ns/xproc-step";
+declare namespace xprocerr="http://www.w3.org/ns/xproc-error";
+declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 
- (:~ module imports :)
- import module namespace p  = "http://www.w3.org/ns/xproc"  at "/xquery/funcs/functions.xqy";
- import module namespace const  = "http://xproc.net/xproc/const"  at "/xquery/core/const.xqy";
- import module namespace parse  = "http://xproc.net/xproc/parse"  at "/xquery/core/parse.xqy";
- import module namespace output = "http://xproc.net/xproc/output" at "/xquery/core/output.xqy";
- import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
- import module namespace   std  = "http://xproc.net/xproc/std"    at "/xquery/steps/std.xqy";
- import module namespace   opt  = "http://xproc.net/xproc/opt"    at "/xquery/steps/opt.xqy";
- import module namespace   ext  = "http://xproc.net/xproc/ext"    at "/xquery/steps/ext.xqy";
+import module namespace p  = "http://www.w3.org/ns/xproc"  at "/xquery/funcs/functions.xqy";
+import module namespace const  = "http://xproc.net/xproc/const"  at "/xquery/core/const.xqy";
+import module namespace parse  = "http://xproc.net/xproc/parse"  at "/xquery/core/parse.xqy";
+import module namespace output = "http://xproc.net/xproc/output" at "/xquery/core/output.xqy";
+import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
+import module namespace   std  = "http://xproc.net/xproc/std"    at "/xquery/steps/std.xqy";
+import module namespace   opt  = "http://xproc.net/xproc/opt"    at "/xquery/steps/opt.xqy";
+import module namespace   ext  = "http://xproc.net/xproc/ext"    at "/xquery/steps/ext.xqy";
 
- declare default function namespace "http://www.w3.org/2005/xpath-functions";
+declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-
- (:~ declare steps :)
- declare variable $xproc:xproc-run       := xproc:xproc-run#4;
- declare variable $xproc:run-step        := xproc:run#7;
- declare variable $xproc:eval-step-func  := xproc:evalstep#4;
- declare variable $xproc:declare-step    := ();
- declare variable $xproc:library         := ();
- declare variable $xproc:pipeline        := ();
- declare variable $xproc:variable        := ();
+declare variable $xproc:xproc-run       := xproc:xproc-run#4;
+declare variable $xproc:run-step        := xproc:run#7;
+declare variable $xproc:eval-step-func  := xproc:evalstep#4;
+declare variable $xproc:declare-step    := ();
+declare variable $xproc:library         := ();
+declare variable $xproc:pipeline        := ();
+declare variable $xproc:variable        := ();
 
 
  (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)

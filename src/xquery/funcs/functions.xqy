@@ -17,22 +17,16 @@ xquery version "3.0" encoding "UTF-8";
 (:~
  :
  :	functions.xqm - defines xproc xpath extensions.
- :
- :
+ : 
  :	
  :)
 
 module namespace func = "http://www.w3.org/ns/xproc";
 
-
-(: declare namespaces :)
-
 declare namespace c     = "http://www.w3.org/ns/xproc-step";
 declare namespace err   = "http://www.w3.org/ns/xproc-error";
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace xsl   = "http://www.w3.org/1999/XSL/Transform";
-
-(:~ declare import :)
 
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
@@ -92,57 +86,57 @@ function func:value-available($value1, $value2){
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:value-available($value1){
+declare %xproc:func function func:value-available($value1){
 (: -------------------------------------------------------------------------- :)
     "true"
 };
 
 
 (: -------------------------------------------------------------------------- :)
-declare function func:step-available($step-name) as xs:boolean{
+declare %xproc:func function func:step-available($step-name) as xs:boolean{
 (: -------------------------------------------------------------------------- :)
     if(starts-with($step-name,'p')) then true() else false()
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:iteration-position(){
+declare %xproc:func function func:iteration-position(){
 (: -------------------------------------------------------------------------- :)
     "true"
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:xpath-version-available($version as xs:double) as xs:boolean{
+declare %xproc:func function func:xpath-version-available($version as xs:double) as xs:boolean{
 (: -------------------------------------------------------------------------- :)
     if ($version = 2.0) then true() else false()
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:resolve-uri($value1){
+declare %xproc:func function func:resolve-uri($value1){
 (: -------------------------------------------------------------------------- :)
 "true"
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:resolve-uri($value1,$value2){
+declare %xproc:func function func:resolve-uri($value1,$value2){
 (: -------------------------------------------------------------------------- :)
 "true"
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:base-uri($value1){
+declare %xproc:func function func:base-uri($value1){
 (: -------------------------------------------------------------------------- :)
 "true"
 };
 
 (: -------------------------------------------------------------------------- :)
-declare function func:base-uri(){
+declare %xproc:func function func:base-uri(){
 (: -------------------------------------------------------------------------- :)
 "true"
 };
 
 
 (: -------------------------------------------------------------------------- :)
-declare function func:iteration-size(){
+declare %xproc:func function func:iteration-size(){
 (: -------------------------------------------------------------------------- :)
 "true"
 };

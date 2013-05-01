@@ -22,20 +22,17 @@ xquery version "3.0"  encoding "UTF-8";
 
 module namespace parse = "http://xproc.net/xproc/parse";
 
+declare namespace p="http://www.w3.org/ns/xproc";
+declare namespace c="http://www.w3.org/ns/xproc-step";
+declare namespace err="http://www.w3.org/ns/xproc-error";
+declare namespace xproc="http://xproc.net/xproc";
+declare namespace ext="http://xproc.net/xproc/ext";
+declare namespace opt="http://xproc.net/xproc/opt";
 
- (: declare namespaces :)
- declare namespace p="http://www.w3.org/ns/xproc";
- declare namespace c="http://www.w3.org/ns/xproc-step";
- declare namespace err="http://www.w3.org/ns/xproc-error";
- declare namespace xproc="http://xproc.net/xproc";
- declare namespace ext="http://xproc.net/xproc/ext";
- declare namespace opt="http://xproc.net/xproc/opt";
+import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
+import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
 
- (: module imports :)
- import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
- import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
-
- declare default function namespace "http://www.w3.org/2005/xpath-functions";
+declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
  (:~
   : looks up std, ext, and opt step definition 
@@ -87,7 +84,7 @@ module namespace parse = "http://xproc.net/xproc/parse";
      'opt-step'
    else if($const:ext-steps/p:declare-step[@type=$name][@xproc:support eq 'true']) then
      'ext-step'
-   else if($node/@type) then
+   else if(local-name($node) eq 'declare-step') then
      'declare-step'
    else if($const:comp-steps/xproc:element[@type=$name][@xproc:support eq 'true'][@xproc:step eq "true"]) then
      'comp-step'

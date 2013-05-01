@@ -25,7 +25,6 @@ module namespace output = "http://xproc.net/xproc/output";
 import module namespace const  = "http://xproc.net/xproc/const"  at "/xquery/core/const.xqy";
 import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
 
-(:~ declare namespaces :)
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace map ="http://marklogic.com/xdmp/map";
 

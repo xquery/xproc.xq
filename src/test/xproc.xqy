@@ -744,11 +744,11 @@ declare function  test:runCount2() {
 
 
 declare function  test:runDelete1() { 
-  let $pipeline := <pipeline version='1.0' name="pipeline" xmlns="http://www.w3.org/ns/xproc">
+  let $pipeline := <p:pipeline version='1.0' name="pipeline" xmlns:p="http://www.w3.org/ns/xproc">
 
-<delete match="p:delete"/>
+<p:delete match="p:delete"/>
 
-</pipeline>
+</p:pipeline>
 
 
   let $stdin    := <pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
@@ -766,8 +766,8 @@ declare function  test:runDelete1() {
   let $outputs   :=  ()
   let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
     return
-      assert:equal($result,<pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
-      </pipeline>)    
+      assert:equal($result,document{<pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
+      </pipeline>})    
 };
 
 

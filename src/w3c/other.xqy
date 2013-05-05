@@ -11,17 +11,20 @@ declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace t="http://xproc.org/ns/testsuite"; 
 declare namespace p="http://www.w3.org/ns/xproc";
 
+let $path := xdmp:get-request-field("path")
+let $debug := xdmp:get-request-field("debug","0")
+
 let $results := 
 element tests{
 
-for $uri in subsequence(cts:uri-match('*/required/add-attribute*.xml'),1,1000)
+for $uri in subsequence(cts:uri-match('*/' || $path ),1,1000)
 let $test := fn:doc($uri)
 let $pipeline := $test/*/t:pipeline/*
-let $source   :=$test/*/t:input[@port eq "source"]/*
+let $source   := $test/*/t:input[@port eq "source"]/*
 let $expected   :=$test/*/t:output[@port eq "result"]/*
 let $bindings := ()
 let $options := ()
-let $dflag :=0
+let $dflag := xs:integer($debug)
 let $tflag :=0
 return
 <test uri="{$uri}" error="{$test//@error}">

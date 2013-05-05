@@ -45,7 +45,16 @@ declare function xprocxq:xq(
     $stdin
     ) as item()*
 {
- xproc:run($pipeline,$stdin,(),(),(),0,0)   
+ xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)   
+};
+
+declare function xprocxq:xq(
+    $pipeline,
+    $stdin,
+    $evalstep
+    ) as item()*
+{
+ xproc:run($pipeline,$stdin,(),(),(),0,0,$evalstep)   
 };
 
  (:~
@@ -71,5 +80,5 @@ declare function xprocxq:xq(
     $tflag as xs:integer?
     ) as item()*
 {
- xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)   
+ xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag,$xproc:eval-step-func)   
 };

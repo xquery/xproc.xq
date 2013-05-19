@@ -22,9 +22,6 @@ xquery version "3.0" encoding "UTF-8";
 
 module namespace std = "http://xproc.net/xproc/std";
 
-declare boundary-space strip;
-declare copy-namespaces preserve,no-inherit;
-
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";

@@ -23,9 +23,6 @@ xquery version "1.0-ml" encoding "UTF-8";
 
 module namespace u = "http://xproc.net/xproc/util";
 
-declare boundary-space strip;
-declare copy-namespaces no-preserve,no-inherit;
-
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
@@ -39,17 +36,26 @@ declare namespace xxq-error = "http://xproc.net/xproc/error";
 declare namespace saxon ="http://test.org/saxon";
 
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
+import module namespace mem = "http://xqdev.com/in-mem-update"
+    at "/MarkLogic/appservices/utils/in-mem-update.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
+
+declare option xdmp:output "method=xml";
+declare option xdmp:output "encoding=UTF8";
+declare option xdmp:output "indent=yes";
 
 (:~ set to 1 to enable debugging :)
 declare variable $u:NDEBUG := $const:NDEBUG;
 
 declare variable $u:inputMap as map:map := map:map();
 
+declare option xdmp:update "true";
+
 (: -------------------------------------------------------------------------- :)
 (:~ Processor Specific                                                         :)
 (: -------------------------------------------------------------------------- :)
+
 
 declare function u:ns-axis($el){
     $el/namespace::*
@@ -76,31 +82,81 @@ declare function u:random(
  xdmp:random($seed)
 };
 
-declare function u:get-server-field($field){
-    xdmp:get-server-field($field)
+declare function u:episode() as xs:unsignedLong{
+ xdmp:random()
+};
+
+declare function u:get-episode(){
+    string(xdmp:get-server-field("p:episode"))
+};
+
+declare function u:set-episode(
+    $episode as xs:unsignedLong
+){
+    xdmp:set-server-field("p:episode",$episode)
+};
+
+declare function u:startMap($episode){
+    u:set-episode($episode)
+};
+
+declare function u:stopMap(){
+(    (),
+    xdmp:set-server-field("p:episode",()))
 };
 
 declare function u:putInputMap(
   $key as xs:string,
   $value as item()*
 ){
- let $map := xdmp:get-server-field("xproc:input-map")
- let $_   := map:put( $map, $key,  $value  )
- return
- xdmp:set-server-field("xproc:input-map",$u:inputMap)
-};
+  try{
+    if($value) then
+    xdmp:eval('
+        import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
 
+        declare option xdmp:update "true";
+
+        declare variable $value external;
+        declare variable $key external;
+
+        let $uri := "/xproc/" || u:get-episode() || "/" || $key || ".xml"
+        return  
+        xdmp:document-insert($uri,
+        <u:root episode="{u:get-episode()}">{
+        for $v in $value
+        return <u:entry id="{$key}">{$v}</u:entry>
+        }</u:root>,(),("xproc"))',
+        (fn:QName("","value"),($value),
+         fn:QName("","key"), $key))
+    else ()
+    }catch($e){ xdmp:log("problem with: " || $key )}
+};
 
 declare function u:getInputMap(
   $key as xs:string
-)as item()*
-{
-  let $map := xdmp:get-server-field("xproc:input-map")
-  return
-        map:get($map,$key)
-
+)
+{if (doc-available("/xproc/" || u:get-episode() || "/" || $key || ".xml")) then
+    collection("xproc")/u:root[@episode eq u:get-episode()]//u:entry[@id eq $key]/*
+else ()
 };
 
+declare function u:getAllResult()
+{
+    xdmp:log(u:get-episode()),
+    for $d in collection("xproc")//u:root[@episode eq u:get-episode()]/u:entry
+    order by $d/@id
+    return $d
+};
+
+declare function u:getResult()
+{
+    collection("xproc")/u:root[@episode eq u:get-episode()]/u:entry[@id eq $const:final_id]/*
+};
+
+declare function u:getInterimResult($id)
+{
+    collection("xproc")/u:root[@episode eq u:get-episode()]/u:entry[@id eq $const:final_id]/*
+};
 
 declare function u:strip-whitespace($xml){
 let $template := <xsl:stylesheet version="2.0">

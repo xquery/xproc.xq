@@ -54,9 +54,9 @@ declare function test:runEntryPointTestForNewEvala() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,$stdin)
+    assert:equal($result,$stdin)
 };
 
 
@@ -75,9 +75,9 @@ declare function test:runEntryPointTestForNewEval1() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)
+    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)
 };
 
 
@@ -94,9 +94,9 @@ declare function test:runEntryPointTestForNewEval2() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,(<a>adfasdf</a>,<root>text</root>,<root/>))
+    assert:equal($result,(<a>adfasdf</a>,<root>text</root>,<root/>))
 };
 
 
@@ -135,9 +135,9 @@ declare function  test:runEntryPointTest() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
+    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
 
 
@@ -151,9 +151,9 @@ declare function  test:runEntryPointTest1() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,())
+    assert:equal($result,())
 };
 
 declare function  test:runEntryPointTest2() { 
@@ -166,9 +166,9 @@ declare function  test:runEntryPointTest2() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-    assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">2</c:result>)
+    assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">2</c:result>)
 
 };
 
@@ -182,9 +182,9 @@ declare function test:runEntryPointTest3() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,(),$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
-      assert:equal($result/*,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">0</c:result>)
+      assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">0</c:result>)
 };
 
 
@@ -198,13 +198,13 @@ declare function  test:runEntryPointTest4() {
   let $bindings := ()
   let $options  := ()
   let $outputs   := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
 
 declare function  test:runDynamicError() { 
-  let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/error.xpl',<options xmlns="xdmp:document-get">
+  let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/error.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)
@@ -214,7 +214,7 @@ declare function  test:runDynamicError() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := try {$xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag) } catch($e) {$e//error:code}
+  let $result   := try { xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func) } catch($e) {$e//error:code}
   return
       assert:equal($result,<error:code xmlns:error="http://marklogic.com/xdmp/error">err:XD0030: XProc Dynamic Error - : p:error throw custom error code - 999999 It is a dynamic error if a step is unable or incapable of performing its function.
 </error:code>)
@@ -222,7 +222,7 @@ declare function  test:runDynamicError() {
 
 
 declare function  test:runComplexSingleBranch() { 
-  let $pipeline :=  xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/complex-single-branch.xpl',<options xmlns="xdmp:document-get">
+  let $pipeline :=  xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/complex-single-branch.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)
@@ -232,7 +232,7 @@ declare function  test:runComplexSingleBranch() {
   let $bindings := ()
   let $options  := ()
   let $output   := ()
-  let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$output,$dflag,$tflag)
+  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
   assert:equal($result,<packed xmlns="">
 	<newwrapper xmlns:p="http://www.w3.org/ns/xproc"></newwrapper>
@@ -254,7 +254,7 @@ declare function  test:inlineIdentity() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag) 
+let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func) 
     return
       assert:equal($result, document{<test xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns=""></test>})
       
@@ -274,13 +274,13 @@ declare function  test:runGroup() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag) 
+let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func) 
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
       
 };
 
-declare function  test:runTryCatch() { 
+declare function  test:runTryCatch1() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/>
 <p:output port="result"/>
@@ -298,7 +298,7 @@ declare function  test:runTryCatch() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
   return
   assert:equal($result,document{<trywrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<c>aaa<a id="1">
@@ -308,7 +308,7 @@ declare function  test:runTryCatch() {
 };
 
 
-declare function  test:runTryCatch1() { 
+declare function  test:runTryCatch2() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/>
 <p:output port="result"/>
@@ -326,7 +326,7 @@ declare function  test:runTryCatch1() {
   let $bindings := ()
   let $options  := ()
   let $outputs   := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
   assert:equal($result,document{<catchwrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<c>aaa<a id="1">
@@ -351,9 +351,9 @@ declare function  test:runForEach1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-     assert:equal(document{$result},document{(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+     assert:equal($result,(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<a>1</a>
       </wrap>,
       <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
@@ -379,7 +379,7 @@ declare function  test:runForEach1() {
       </wrap>,
       <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<a>9</a>
-      </wrap>)})
+      </wrap>))
 };
 
 
@@ -398,9 +398,9 @@ declare function  test:runForEach2() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-     assert:equal(document{$result},document{(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+     assert:equal($result,(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<a>1</a>
       </wrap>,
       <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
@@ -426,7 +426,7 @@ declare function  test:runForEach2() {
       </wrap>,
       <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<a>9</a>
-      </wrap>)})
+      </wrap>))
 };
 
 
@@ -442,15 +442,15 @@ declare function  test:runIdentity() {
 
 </p:declare-step>
 
-  let $stdin    := ()
+  let $stdin    := <a/>
   let $dflag    := 0
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
- let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+ let $result := xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
   return
-     assert:equal($result,document{<test/>})
+     assert:equal($result,<a/>)
 };
 
 
@@ -486,7 +486,7 @@ declare function  test:runViewPort() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
- let $result := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+ let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
      assert:equal($result,document{<doc xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
 	<foo></foo>
@@ -519,7 +519,7 @@ declare function  test:runChoose1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result, document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">greater then 2</result>})
 };
@@ -547,7 +547,7 @@ declare function  test:runChoose2() {
   let $bindings := ()
   let $options  := ()
   let $outputs   := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">less then 2</result>})
 };
@@ -578,7 +578,7 @@ declare function  test:runChoose3() {
   let $bindings := ()
   let $options  := ()
   let $outputs   := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">equal 2</result>})
 };
@@ -612,7 +612,7 @@ declare function  test:runCompare1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   := xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">true</c:result>)    
 };
@@ -646,7 +646,7 @@ declare function  test:runCompare2() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">true</c:result>)    
 };
@@ -680,7 +680,7 @@ declare function  test:runCompare3() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">false</c:result>)    
 };
@@ -708,7 +708,7 @@ declare function  test:runCount1() {
   let $bindings := ()
   let $options  := ()
   let $outputs   :=  ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)    
 };
@@ -732,12 +732,12 @@ declare function  test:runCount2() {
     <p>This is a para</p>
 </doc>
 
-  let $dflag    := 0
+  let $dflag    := 1
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
   let $outputs   :=  ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
   return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
@@ -764,10 +764,10 @@ declare function  test:runDelete1() {
   let $bindings := ()
   let $options  := ()
   let $outputs   :=  ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
-      assert:equal($result,document{<pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
-      </pipeline>})    
+      assert:equal($result,<pipeline name="pipeline" xmlns="http://www.w3.org/ns/xproc">
+      </pipeline>)    
 };
 
 
@@ -776,9 +776,10 @@ declare function  test:runPack1() {
   let $pipeline := <p:declare-step version='1.0' name="pipeline"
 	    xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source" sequence="true"/>
-    <p:input port="alt" sequence="true">
+
+<p:input port="alt" sequence="true">
     <p:inline><root>inline alt</root></p:inline>
-    </p:input>
+</p:input>
 <p:output port="result"/>
 
 <p:pack wrapper="wrapper">
@@ -798,10 +799,8 @@ declare function  test:runPack1() {
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
-  let $outputs   := <xproc:output port="alt" port-type="external" xproc:default-name="!1" step="!1">{
-    (<doc-a/>,<doc-b/>,<doc-c/>)
-}</xproc:output> 
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $outputs   := ()
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,<sequence-wrapper xmlns:xs="" xmlns:xsi="" xmlns:map="" xmlns:xproc="" xmlns="">
 		  <wrapper>
@@ -832,7 +831,7 @@ declare function  test:runDeclareStep1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,())
 };
@@ -853,7 +852,7 @@ declare function  test:runRename1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,(<doc xmlns=""></doc>,<doc xmlns=""></doc>))
 };
@@ -882,7 +881,7 @@ declare function  test:runExtest1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)    
 };
@@ -903,7 +902,7 @@ declare function  test:runAddAttribute1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,document{<people xmlns="">
 	<person gender="Male"></person>
@@ -925,7 +924,7 @@ declare function  test:runAddAttribute2() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,document{<people xmlns="">
 	<person gender="Male"></person>
@@ -952,7 +951,7 @@ declare function  test:runAddXMLBase() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,document{<people xml:base="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"><person/><person/></people>})    
 };
@@ -978,7 +977,7 @@ declare function  test:runPack2() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
       assert:equal($result,<NewFilmElement><people><person/><person/></people><b xmlns:c="http://www.w3.org/ns/xproc-step">asdfsdaF</b></NewFilmElement>)
 };
@@ -1022,9 +1021,9 @@ declare function  test:runXSLT1() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
   return
-    assert:equal($result,document{<html xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
+    assert:equal($result,<html xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
 	<body>
 	  <h1>Film list</h1>
 	  <ul>
@@ -1032,7 +1031,7 @@ declare function  test:runXSLT1() {
 	    <li>Great Unexpectations</li>
 	  </ul>
 	</body>
-      </html>})
+      </html>)
 };
 
 
@@ -1054,7 +1053,7 @@ declare function  test:runZip() {
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   := $xproc:run-step($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
   return
     assert:equal($result,<c:result href="/usr/local/bin/test.zip" command="create" return-manifest="true" options="nothing" xmlns:c="http://www.w3.org/ns/xproc-step">
 </c:result>)

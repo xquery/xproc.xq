@@ -29,7 +29,7 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace xprocerr="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 
-import module namespace p  = "http://www.w3.org/ns/xproc"  at "/xquery/funcs/functions.xqy";
+import module namespace     p  = "http://www.w3.org/ns/xproc"    at "/xquery/funcs/functions.xqy";
 import module namespace const  = "http://xproc.net/xproc/const"  at "/xquery/core/const.xqy";
 import module namespace parse  = "http://xproc.net/xproc/parse"  at "/xquery/core/parse.xqy";
 import module namespace output = "http://xproc.net/xproc/output" at "/xquery/core/output.xqy";
@@ -47,7 +47,6 @@ declare variable $xproc:declare-step    := ();
 declare variable $xproc:library         := ();
 declare variable $xproc:pipeline        := ();
 declare variable $xproc:variable        := ();
-
 
  (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)
  (: COMPONENT STEPS                                                                                                                                        :)   
@@ -94,11 +93,10 @@ let $namespaces  := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
 let $sorted := parse:pipeline-step-sort(  $currentstep/node(), ())  
 let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >{$sorted}
-{xproc:genExtPost($sorted)}
 </p:declare-step>
 return
-  output:serialize(
-   xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$primary,(),())
+   output:interim-serialize(
+       xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$primary,(),())
    ,0,1)
 };
 
@@ -141,13 +139,17 @@ return
     let $ast-when := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}"><p:input port="source"/>
 <p:output port="result"/>{$when-sorted}{xproc:genExtPost($when-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-when,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
+      output:interim-serialize(
+        xproc:evalAST($ast-when,$xproc:eval-step-func,$namespaces,$primary,(),()),
+      0,1)
   else
     let $otherwise-sorted :=  parse:pipeline-step-sort( $currentstep/p:otherwise/node()  , () )
     let $ast-otherwise := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" ><p:input port="source"/>
 <p:output port="result"/>{$otherwise-sorted}{xproc:genExtPost($otherwise-sorted)}</p:declare-step>
     return
-      output:serialize(xproc:evalAST($ast-otherwise,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
+      output:interim-serialize(
+        xproc:evalAST($ast-otherwise,$xproc:eval-step-func,$namespaces,$primary,(),())
+     , 0,1)
 
 };
 
@@ -179,9 +181,9 @@ let $ast-catch := <p:declare-step name="{$defaultname}" xproc:default-name="{$de
 
 return
   try{
-    output:serialize(xproc:evalAST($ast-try,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
+    output:interim-serialize(xproc:evalAST($ast-try,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
   }catch *{
-    output:serialize(xproc:evalAST($ast-catch,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
+    output:interim-serialize(xproc:evalAST($ast-catch,$xproc:eval-step-func,$namespaces,$primary,(),()), 0,1)
   }
 };
 
@@ -222,7 +224,7 @@ let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultn
 let $result :=     
 for $item in u:evalXPATH($iteration-select,document{$source})
 return    
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
+  output:interim-serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
 return $result    
 };
 
@@ -271,7 +273,7 @@ let $template := <xsl:stylesheet version="2.0">
 let $data := (u:transform($template,$source))
 let $results := (for $item at $count in $data/*
 return
-  output:serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0,1)
+  output:interim-serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()), 0,1)
 )
 
 let $final-template := <xsl:stylesheet version="2.0">
@@ -487,7 +489,7 @@ return
          u:getInputMap( $pinput/p:pipe/@xproc:step-name || "#" ||  $pinput/p:pipe/@port)
                     
 let $result :=  u:evalXPATH(string($pinput/@select),$data)
-let $_ := u:putInputMap( $step-name || "#" ||  $pinput/@port, $result)
+let $_ := u:putInputMap( $step-name || "#" ||  ($pinput/@port,"result")[1], $result)
  return
    if ($result) then
      document{$result}
@@ -527,8 +529,8 @@ let $_ := u:putInputMap( $step-name || "#" ||  $pinput/@port, $result)
        else         
          u:getInputMap( $pinput/p:pipe/@xproc:step-name || "#" ||  $pinput/p:pipe/@port)
            
-let $result :=  $data (:$data  :u:evalXPATH(string($pinput/@select),$data)    :)
-let $_ := u:putInputMap( $step-name || "#" ||  $currentstep/p:input[@primary eq 'true']/@port, $result)
+let $result :=  u:evalXPATH(string($pinput/@select),$data)  
+let $_ := u:putInputMap( $step-name || "#" ||  ($currentstep/p:input[@primary eq 'true']/@port,"result")[1], $result)
  return
    if ($result) then     
      document{$result}
@@ -571,7 +573,7 @@ let $_ := u:putInputMap( $step-name || "#" ||  $currentstep/p:input[@primary eq 
  let $log-port     := $currentstep/p:log/@port
 
  let $result       := $stepfunction( if (empty($primary-result)) then $primary else $primary,$secondary-result,$with-options,$currentstep)
- let $_            := u:putInputMap($step || "#" || $currentstep/p:output[@primary eq "true"]/@port, $result)
+ let $_            := u:putInputMap($step || "#" || ($currentstep/p:output/@port,"result")[1], $result)
 
  return
       $result
@@ -604,14 +606,12 @@ let $_ := u:putInputMap( $step-name || "#" ||  $currentstep/p:input[@primary eq 
    $ast as element(p:declare-step),
    $namespaces as element(namespace),
    $steps as xs:string*,
-   $evalstep-function,
+   $f as function(*),
    $primary as item()*
 ){ 
-let $f := $evalstep-function( ?, $namespaces, ?, $ast)
-return
 (
   $ast,
-  fn:fold-left(function($a,$b){ $f($b,$a) }, $primary, $steps)
+  fn:fold-left(function($primary,$step){ $f($step,$namespaces,$primary,$ast) }, $primary, $steps)
 )
 };
 
@@ -641,8 +641,7 @@ return
 ) as item()*
 {
    let $steps := xproc:genstepnames($ast)
-   let $pipeline-name := $ast/@xproc:default-name
-   let $_ := () (:u:putInputMap($ast/@xproc:default-name || "#source",$stdin) :)
+   let $_ := u:putInputMap($ast/@xproc:default-name || "#source",$stdin) 
    return
      xproc:stepFoldEngine(
        $ast,
@@ -682,6 +681,8 @@ declare function xproc:run(
     $tflag as xs:integer
     ) as item()*
 {
+ let $episode := u:episode()
+ let $start := u:startMap($episode)       
  let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
  let $namespaces := xproc:enum-namespaces($pipeline)
  let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
@@ -698,9 +699,43 @@ declare function xproc:run(
  }
  let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
  let $eval_result := xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$stdin,$bindings,())
- return output:serialize($eval_result,$dflag)
+ return (output:serialize($eval_result,$dflag),u:stopMap())
+
 };
 
+
+declare function xproc:run(
+    $pipeline,
+    $stdin as item()*,
+    $bindings,
+    $options,
+    $outputs,
+    $dflag as xs:integer,
+    $tflag as xs:integer,
+    $func as function(*)
+    ) as item()*
+{
+ let $episode := u:episode()    
+ let $start := u:startMap($episode)   
+ let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
+ let $namespaces := xproc:enum-namespaces($pipeline)
+ let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
+ let $ast        := element p:declare-step {$parse/@*,
+
+   u:ns-axis($parse),  
+   namespace p {"http://www.w3.org/ns/xproc"},
+   namespace xproc {"http://xproc.net/xproc"},
+   namespace ext {"http://xproc.net/xproc/ext"},
+   namespace opt {"http://xproc.net/xproc/opt"},
+   namespace c {"http://www.w3.org/ns/xproc-step"},
+   namespace xprocerr {"http://www.w3.org/ns/xproc-error"},
+   namespace xxq-error {"http://xproc.net/xproc/error"},
+   parse:pipeline-step-sort( $parse/*,  element p:declare-step {$parse/@*[name(.) ne 'xproc:default-name'],  attribute xproc:default-name{$const:init_unique_id} } )
+ }
+ let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
+ let $eval_result := xproc:evalAST($ast, ($func,$xproc:eval-step-func)[1],$namespaces,$stdin,$bindings,())
+ return (output:serialize($eval_result,$dflag), u:stopMap())
+};
 
 
  (: ------------------------------------------------------------------------------------------------------------------------------------------------------ :)

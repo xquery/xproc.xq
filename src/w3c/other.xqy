@@ -1,10 +1,11 @@
 xquery version "1.0-ml";
 
+
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+
 declare boundary-space strip;
 declare copy-namespaces no-preserve,no-inherit;
 
-
-import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
 
 declare namespace error="http://marklogic.com/xdmp/error";
 declare namespace err="http://www.w3.org/ns/xproc-error";
@@ -48,7 +49,7 @@ return
 
 }
 return
-(
+(xdmp:set-response-content-type("text/xml"),
 <results total="{count($results//test)}"
 pass="{count($results//test-result[@pass eq "true"])}"
 fail="{count($results//test-result[@pass eq "false"])}">

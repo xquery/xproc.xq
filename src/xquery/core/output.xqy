@@ -27,6 +27,7 @@ import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/cor
 
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace map ="http://marklogic.com/xdmp/map";
+declare namespace ext = "http://xproc.net/xproc/ext";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -50,17 +51,14 @@ declare function output:serialize(
  let $ast :=subsequence($result,1,1)
  return
     if($dflag eq 1) then
-        element xproc:debug{
-          element xproc:pipeline {$ast},
-          element xproc:outputs {
-            for $key in map:keys( $u:inputMap)
-            order by $key
-            return
-            <entry key="{$key}">
-            {u:getInputMap($key) }
-            </entry>}
+    element xproc:debug{
+        attribute episode {u:get-episode()},
+        element xproc:pipeline {$ast},
+        element xproc:outputs {
+            u:getAllResult()
         }
-    else u:getInputMap($const:final_id)
+
+    } else u:getResult()
  };
 
 (:~ output:seriaize - serializes output from xproc component steps
@@ -76,25 +74,13 @@ declare function output:serialize(
  : @returns item()* 
  :)
 (: -------------------------------------------------------------------------- :)
-declare function output:serialize(
+declare function output:interim-serialize(
     $result as item()*,
     $dflag as xs:integer,
     $level as xs:integer
     ) as item()*
-{
-
+{ 
  let $ast :=subsequence($result,1,1)
  return
-    if($dflag eq 1) then
-        element xproc:debug{
-          element xproc:pipeline {$ast},
-          element xproc:outputs {$u:inputMap}
-        }
-    else
-        let $map  := u:get-server-field("xproc:input-map")
-        let $keys :=  for $key in map:keys($map)
-        return
-          if (ends-with(string($key),'!#result') ) then string($key)
-          else () 
-    return u:getInputMap($keys[last()])
+      subsequence($result,2)
  };

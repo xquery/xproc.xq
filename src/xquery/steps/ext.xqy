@@ -32,6 +32,7 @@ import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
+declare copy-namespaces no-preserve, no-inherit;
 
 (: -------------------------------------------------------------------------- :)
 declare

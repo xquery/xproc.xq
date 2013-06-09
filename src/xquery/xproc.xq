@@ -27,8 +27,7 @@ declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
-declare construction strip;
-declare copy-namespaces preserve, no-inherit;
+
 
  (:~
   : simplified entry point into xproc.xq returning the final serialized output of pipeline processing
@@ -84,4 +83,33 @@ declare function xprocxq:xq(
     ) as item()*
 {
  xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag,$xproc:eval-step-func)   
+};
+
+
+ (:~
+  : entry point into xproc.xq returning the final serialized output of pipeline processing
+  :
+  : @param $pipeline - xproc pipeline
+  : @param $stdin - externally defined standard input
+  : @param $bindings - externally declared port bindings
+  : @param $options - externally declared options
+  : @param $outputs - externally declared output
+  : @param $dflag - debug flag
+  : @param $tflag - timing flag
+  : @param $evalstepfunc -
+  :
+  : @returns item()*
+  :)
+declare function xprocxq:xq(
+    $pipeline as item(),
+    $stdin as item()*,
+    $bindings as item()?,
+    $options as item()?,
+    $outputs as item()?,
+    $dflag as xs:integer?,
+    $tflag as xs:integer?,
+    $evalstepfunc as function(*)
+    ) as item()*
+{
+ xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag,$evalstepfunc)   
 };

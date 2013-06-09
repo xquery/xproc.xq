@@ -32,6 +32,8 @@ declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
+declare copy-namespaces no-preserve,no-inherit;
+
 (: -------------------------------------------------------------------------- :)
 (:~ XProc Namespace Constants :)
 (: -------------------------------------------------------------------------- :)

@@ -34,6 +34,8 @@ import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/cor
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
+declare copy-namespaces preserve, inherit;
+
  (:~
   : looks up std, ext, and opt step definition 
   :

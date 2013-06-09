@@ -15,13 +15,13 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace ext ="http://xproc.net/xproc/ext";
                       
-declare function  test:loadModuleTest() { 
+declare %test:case function  test:loadModuleTest() { 
   let $actual := <test/>
   return
    assert:equal($actual,<test/>) 
 };
 
-declare function  test:parseExplicitNames() {
+declare %test:case function  test:parseExplicitNames() {
   
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
@@ -55,7 +55,7 @@ Congratulations! You've run your first pipeline!
 };
 
 (:
-declare function  test:parseExplicitNames1() {   
+declare %test:case function  test:parseExplicitNames1() {   
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -65,7 +65,7 @@ declare function  test:parseExplicitNames1() {
     assert:equal($result,())
 };
 
-declare function  test:parseExplicitNames2() {   
+declare %test:case function  test:parseExplicitNames2() {   
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -76,7 +76,7 @@ declare function  test:parseExplicitNames2() {
 };
 
 :)
-declare function  test:addParseNamespace() { 
+declare %test:case function  test:addParseNamespace() { 
  let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test1.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -90,7 +90,7 @@ declare function  test:addParseNamespace() {
     )
 };
 
-declare function  test:addParseNamespace1() { 
+declare %test:case function  test:addParseNamespace1() { 
  let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test1.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -104,43 +104,43 @@ declare function  test:addParseNamespace1() {
     )
 };
 
-declare function  test:testestType1() { 
+declare %test:case function  test:testestType1() { 
   let $result   := parse:type(<p:identity/>)
   return
     assert:equal( $result, 'std-step')
 };
 
-declare function  test:testestType2() { 
+declare %test:case function  test:testestType2() { 
   let $result   := parse:type(<p:exec/>)
   return
     assert:equal($result,'opt-step')
 };
 
-declare function  test:testestType3() { 
+declare %test:case function  test:testestType3() { 
   let $result   := parse:type(<ext:pre/>)
   return
     assert:equal( $result, 'ext-step')
 };
 
-declare function  test:testestType4() { 
+declare %test:case function  test:testestType4() { 
   let $result   := parse:type(<p:input/>)
   return
     assert:equal( $result, 'comp')
 };
 
-declare function  test:testestType5() { 
+declare %test:case function  test:testestType5() { 
   let $result   := ''
   return
     assert:equal( $result, '')
 };
 
-declare function  test:testestType6() { 
+declare %test:case function  test:testestType6() { 
   let $result   := parse:type(<p:adsfadsfasdfadsf/>)
   return
     (assert:equal( $result, 'error'))
 };
 
-declare function  test:testExplicitName() { 
+declare %test:case function  test:testExplicitName() { 
  let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -257,7 +257,7 @@ declare function  test:testExplicitName() {
     </p:declare-step>)
 };
 
-declare function  test:testExplicitName1() { 
+declare %test:case function  test:testExplicitName1() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -290,7 +290,7 @@ Congratulations! You've run your first pipeline!
 ) 
 };
 
-declare function  test:testAST() { 
+declare %test:case function  test:testAST() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -334,7 +334,7 @@ Congratulations! You've run your first pipeline!
     </p:declare-step>) 
 };
 
-declare function  test:testAST1() { 
+declare %test:case function  test:testAST1() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -548,14 +548,14 @@ declare function  test:testAST1() {
     </p:declare-step>) 
 };
 
-declare function  test:testExplicitBindings1() { 
+declare %test:case function  test:testExplicitBindings1() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test1.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)
   let $result   := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type($pipeline))))
   return 
-     assert:equal($result,<p:declare-step version="1.0" xproc:type="comp-step" xproc:default-name="!1" xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc">
+     assert:equal($result,    <p:declare-step version="1.0" xproc:type="declare-step" xproc:default-name="!1" xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc">
       <ext:pre xproc:default-name="!1.0" xproc:step="true" xproc:func="ext:pre#4" xmlns:ext="http://xproc.net/xproc/ext" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error">
 	<p:input port="source" select="/" xproc:type="comp" primary="true">
 	  <p:inline xproc:type="comp">
@@ -575,7 +575,7 @@ Congratulations! You've run your first pipeline!
     </p:declare-step>) 
 };
 
-declare function  test:testExplicitBindings2() { 
+declare %test:case function  test:testExplicitBindings2() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -791,7 +791,7 @@ declare function  test:testExplicitBindings2() {
     </p:declare-step>) 
 };
 
-declare function  test:testExplicitBindings3() { 
+declare %test:case function  test:testExplicitBindings3() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -837,7 +837,7 @@ Congratulations! You've run your first pipeline!
     </p:declare-step>) 
 };
 
-declare function  test:testExplicitBindings4() { 
+declare %test:case function  test:testExplicitBindings4() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -874,7 +874,7 @@ declare function  test:testExplicitBindings4() {
 };
 
 
-declare function  test:testStepSort() { 
+declare %test:case function  test:testStepSort() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -918,7 +918,7 @@ declare function  test:testStepSort() {
 };
 
 
-declare function  test:testStepSort1() { 
+declare %test:case function  test:testStepSort1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -951,7 +951,7 @@ declare function  test:testStepSort1() {
 };
 
 
-declare function  test:testStepSort2() { 
+declare %test:case function  test:testStepSort2() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -970,7 +970,7 @@ declare function  test:testStepSort2() {
 };
 
 
-declare function  test:testXProcSteps() { 
+declare %test:case function  test:testXProcSteps() { 
   let $pipeline :=  <p:declare-step name="main">
 <p:input port="source"/><p:output port="result"/>
 <p:group>

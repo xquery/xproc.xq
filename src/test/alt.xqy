@@ -14,16 +14,21 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace ext ="http://xproc.net/xproc/ext";
 declare namespace foo="http://acme.com/test";
+declare namespace cx="http://xmlcalabash.com/ns/extensions";
 
 declare namespace test1="http://test.com";
 declare namespace test2="http://test2.com";
 
-declare function  test:goTest() { 
+declare copy-namespaces no-preserve, no-inherit;
+
+declare %test:case function  test:goTest() { 
   let $pipeline :=
-    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0" xmlns:h="http://www.w3.org/1999/xhtml">
       <p:input port="source"/>
       <p:output port="result"/>
-      <p:identity/>
+     <p:add-attribute match="h:div[h:pre]"
+                       attribute-name="class"
+                       attribute-value="example"/>
     </p:declare-step>
   let $stdin    := <films><title>One who did not fly</title><title>Great Unexpectations</title></films>
   let $dflag    := 0
@@ -40,12 +45,12 @@ declare function  test:goTest() {
 };
 
 
-declare function  test:runtest1() { 
+declare %test:case function  test:runtest1() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
       <p:input port="source"/>
       <p:output port="result"/>
-      <p:identity/>
+      <p:wrap wrapper="test"/>
     </p:declare-step>
   let $stdin    := <films><title>One who did not fly</title><title>Great Unexpectations</title></films>
   let $dflag    := 0
@@ -69,7 +74,7 @@ declare function  test:runtest1() {
 };
 
 
-declare function  test:runtest2() { 
+declare %test:case function  test:runtest2() { 
   let $pipeline :=
     <p:declare-step name="test" xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
       <p:input port="source"/>

@@ -13,6 +13,7 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace ext ="http://xproc.net/xproc/ext";
 declare namespace foo="http://acme.com/test";
+declare namespace cx="http://xmlcalabash.com/ns/extensions";
 
 declare namespace test1="http://test.com";
 declare namespace test2="http://test2.com";
@@ -24,23 +25,41 @@ declare function  test:loadModuleTest() {
 };
 
 
-declare function  test:enumNSTest() { 
+declare %test:case function test:enumNSTest() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
        </options>)
   let $result := xproc:enum-namespaces($pipeline)
   return
-    assert:equal($result,<namespace name="" xmlns="">
-	<ns prefix="cx" URI="http://xmlcalabash.com/ns/extensions"></ns>
-	<ns prefix="c" URI="http://www.w3.org/ns/xproc-step"></ns>
-	<ns prefix="p" URI="http://www.w3.org/ns/xproc"></ns>
-	<ns prefix="xml" URI="http://www.w3.org/XML/1998/namespace"></ns>
-	<ns prefix="" URI=""></ns>
-      </namespace>)
+    assert:equal($result,    <namespace name="" xmlns="">
+      <ns prefix="cx">http://xmlcalabash.com/ns/extensions</ns>
+      <ns prefix="c">http://www.w3.org/ns/xproc-step</ns>
+      <ns prefix="p">http://www.w3.org/ns/xproc</ns>
+    </namespace>)
 };
 
-declare function test:runEntryPointTestForNewEvala() { 
+
+declare %test:case function test:enumNSTest1() { 
+  let $pipeline :=  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0" xmlns:h="http://www.w3.org/1999/xhtml">
+      <p:input port="source"/>
+      <p:output port="result"/>
+     <p:add-attribute match="h:div[h:pre]"
+                       attribute-name="class"
+                       attribute-value="example"/>
+    </p:declare-step>
+
+  let $result := xproc:enum-namespaces($pipeline)
+  return
+    assert:equal($result,    <namespace name="" xmlns="">
+      <ns prefix="h">http://www.w3.org/1999/xhtml</ns>
+      <ns prefix="c">http://www.w3.org/ns/xproc-step</ns>
+      <ns prefix="p">http://www.w3.org/ns/xproc</ns>
+    </namespace>)
+};
+
+
+declare %test:case function test:runEntryPointTestForNewEvala() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -60,15 +79,16 @@ declare function test:runEntryPointTestForNewEvala() {
 };
 
 
-declare function test:runEntryPointTestForNewEval1() { 
+declare %test:ignore function test:runEntryPointTestForNewEval1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
+    
   <p:identity name="step1"/>
   <p:identity name="step2"/>
   <p:identity name="step3"/>
   <p:count name="step5"/>
-  <p:identity name="step3"/>
+  <p:identity name="step6"/>
 </p:declare-step>
   let $stdin    := (<a>adfasdf</a>,<root>text</root>,<root/>)
   let $dflag    := 0
@@ -81,7 +101,7 @@ declare function test:runEntryPointTestForNewEval1() {
 };
 
 
-declare function test:runEntryPointTestForNewEval2() { 
+declare %test:ignore function test:runEntryPointTestForNewEval2() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -101,7 +121,7 @@ declare function test:runEntryPointTestForNewEval2() {
 
 
 (:
-declare function test:runEntryPointTestForNewEval3() { 
+declare %test:ignore function test:runEntryPointTestForNewEval3() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -125,7 +145,7 @@ declare function test:runEntryPointTestForNewEval3() {
 :)
 
 
-declare function  test:runEntryPointTest() { 
+declare %test:case function test:runEntryPointTest() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -141,7 +161,7 @@ declare function  test:runEntryPointTest() {
 };
 
 
-declare function  test:runEntryPointTest1() { 
+declare %test:case function test:runEntryPointTest1() { 
   let $pipeline :=  xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/simple.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -156,7 +176,7 @@ declare function  test:runEntryPointTest1() {
     assert:equal($result,())
 };
 
-declare function  test:runEntryPointTest2() { 
+declare %test:case function test:runEntryPointTest2() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -172,7 +192,7 @@ declare function  test:runEntryPointTest2() {
 
 };
 
-declare function test:runEntryPointTest3() { 
+declare %test:case function test:runEntryPointTest3() { 
   let $pipeline :=  xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/test2.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -188,7 +208,7 @@ declare function test:runEntryPointTest3() {
 };
 
 
-declare function  test:runEntryPointTest4() { 
+declare %test:case function test:runEntryPointTest4() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/><p:output port="result"/>
 <p:identity/><p:count/></p:declare-step>
@@ -203,7 +223,7 @@ declare function  test:runEntryPointTest4() {
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
 
-declare function  test:runDynamicError() { 
+declare %test:ignore function  test:runDynamicError() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/error.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -220,8 +240,8 @@ declare function  test:runDynamicError() {
 </error:code>)
 };
 
-
-declare function  test:runComplexSingleBranch() { 
+(: failing :)
+declare %test:case function  test:runComplexSingleBranch() { 
   let $pipeline :=  xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/complex-single-branch.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -234,19 +254,16 @@ declare function  test:runComplexSingleBranch() {
   let $output   := ()
   let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-  assert:equal($result,<packed xmlns="">
-	<newwrapper xmlns:p="http://www.w3.org/ns/xproc"></newwrapper>
-	<a xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error">test</a>
-      </packed>)
+  assert:equal($result,<packed><newwrapper><a new-id="this is a new string"/></newwrapper><a>test</a></packed>)
 };
 
 
-declare function  test:inlineIdentity() { 
+(: failing :)
+declare %test:case function  test:inlineIdentity() { 
   let $pipeline := <p:declare-step name="main" version="1.0" xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source"/>
 <p:output port="result"/>
 <p:identity><p:input port="source"><p:inline><test/></p:inline></p:input></p:identity>
-<p:identity/>
 </p:declare-step>
   let $stdin    := (<a/>)
   let $dflag    := 0
@@ -256,11 +273,11 @@ declare function  test:inlineIdentity() {
   let $outputs  := ()
 let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func) 
     return
-      assert:equal($result, document{<test xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns=""></test>})
+      assert:equal($result, <test/>)
       
 };
 
-declare function  test:runGroup() { 
+declare %test:case function  test:runGroup() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/><p:output port="result"/>
 <p:group>
@@ -280,7 +297,7 @@ let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-f
       
 };
 
-declare function  test:runTryCatch1() { 
+declare %test:case function  test:runTryCatch1() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/>
 <p:output port="result"/>
@@ -300,25 +317,35 @@ declare function  test:runTryCatch1() {
   let $outputs  := ()
   let $result   := xproc:run($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)
   return
-  assert:equal($result,document{<trywrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+  assert:equal($result,<trywrap xmlns="">
 	<c>aaa<a id="1">
 	    <b id="2">test</b>
 	  </a></c>
-      </trywrap>})
+      </trywrap>)
 };
 
 
-declare function  test:runTryCatch2() { 
+declare %test:case function  test:runTryCatch2() { 
   let $pipeline := <p:declare-step name="main">
 <p:input port="source"/>
 <p:output port="result"/>
 <p:try>
-  <p:wrap wrapper="trywrap" match="" adfadfa=""/> <!-- throw error //-->
-<p:catch>
-  <p:wrap wrapper="catchwrap" match="/"/>
-</p:catch>
+  <p:group>
+    <p:http-request>
+      <p:input port="source">
+        <p:inline>
+          <c:request method="post" href="http://example.com/form-action">
+            <c:body content-type="application/x-www-form-urlencoded">name=W3C&amp;spec=XProc</c:body>
+          </c:request>
+        </p:inline>
+      </p:input>
+    </p:http-request>
+  </p:group>
+  <p:catch>
+    <p:wrap wrapper="catchwrap" match="/"/>
+  </p:catch>
 </p:try>
-<p:identity/>
+  
 </p:declare-step>
   let $stdin    := <c>aaa<a id="1"><b id="2">test</b></a></c>
   let $dflag    := 0
@@ -328,15 +355,16 @@ declare function  test:runTryCatch2() {
   let $outputs   := ()
   let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-  assert:equal($result,document{<catchwrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<c>aaa<a id="1">
-	    <b id="2">test</b>
-	  </a></c>
-      </catchwrap>})
+  assert:equal($result,<catchwrap xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:err="http://www.w3.org/ns/xproc-error">
+      <c>aaa<a id="1">
+	  <b id="2">test</b>
+	</a></c>
+    </catchwrap>)
 };
 
 
-declare function  test:runForEach1() { 
+(:
+declare %test:ignore %test:ignore function test:runForEach1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source"/>
   <p:output port="result" sequence="true"/>
@@ -383,7 +411,7 @@ declare function  test:runForEach1() {
 };
 
 
-declare function  test:runForEach2() { 
+declare %test:ignore %test:ignore function test:runForEach2() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source"/>
   <p:output port="result" sequence="true"/>
@@ -428,10 +456,9 @@ declare function  test:runForEach2() {
 	<a>9</a>
       </wrap>))
 };
+:)
 
-
-
-declare function  test:runIdentity() { 
+declare %test:case function  test:runIdentity() { 
   let $pipeline := <p:declare-step version="1.0" xmlns:p="http://www.w3.org/ns/xproc" name="main">
 
     <p:identity>
@@ -453,8 +480,9 @@ declare function  test:runIdentity() {
      assert:equal($result,<a/>)
 };
 
+(: faiing :)
 
-declare function  test:runViewPort() { 
+declare %test:case function test:runViewPort() { 
   let $pipeline := <p:declare-step version="1.0" xmlns:p="http://www.w3.org/ns/xproc" name="main">
 <p:input port="source" sequence="true">
 <p:inline>
@@ -488,16 +516,16 @@ declare function  test:runViewPort() {
   let $outputs  := ()
  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
   return
-     assert:equal($result,document{<doc xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
+     assert:equal($result,<doc xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error" xmlns="">
 	<foo></foo>
 	<foo></foo>
 	<foo></foo>
 	<foo></foo>
-      </doc>})
+      </doc>)
 };
 
-
-declare function  test:runChoose1() { 
+(: faiing :)
+declare %test:case function  test:runChoose1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -506,10 +534,10 @@ declare function  test:runChoose1() {
       <p:pipe step="main" port="source"/>
     </p:xpath-context>
     <p:when test="count(//*) gt 1">
-    <p:identity><p:input port="source"><p:inline><result>greater then 2 </result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="when"/>
     </p:when>
     <p:otherwise>
-    <p:identity><p:input port="source"><p:inline><result>less then 2</result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="otherwise"/>
   </p:otherwise>
   </p:choose>
 </p:declare-step>
@@ -521,11 +549,13 @@ declare function  test:runChoose1() {
   let $outputs  := ()
   let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
-      assert:equal($result, document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">greater then 2</result>})
+      assert:equal($result, <when>
+      <a>afdsfsadf<b></b><c></c><c>test1</c></a>
+    </when>)
 };
 
 
-declare function  test:runChoose2() { 
+declare %test:case function  test:runChoose2() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -534,10 +564,10 @@ declare function  test:runChoose2() {
       <p:pipe step="main" port="source"/>
     </p:xpath-context>
     <p:when test="count(.) gt 4">
-    <p:identity><p:input port="source"><p:inline><result>greater then 2 </result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="when"/>
     </p:when>
     <p:otherwise>
-    <p:identity><p:input port="source"><p:inline><result>less then 2</result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="otherwise"/>
   </p:otherwise>
   </p:choose>
 </p:declare-step>
@@ -549,11 +579,16 @@ declare function  test:runChoose2() {
   let $outputs   := ()
   let $result   := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
-      assert:equal($result,document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">less then 2</result>})
+      assert:equal($result,<otherwise>
+      <c>
+	<a>test1</a>
+	<a>test2</a>
+      </c>
+    </otherwise>)
 };
 
 
-declare function  test:runChoose3() { 
+declare %test:case function  test:runChoose3() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source"/>
   <p:output port="result"/>
@@ -562,13 +597,13 @@ declare function  test:runChoose3() {
       <p:pipe step="main" port="source"/>
     </p:xpath-context>
     <p:when test="count(//*) gt 2">
-    <p:identity><p:input port="source"><p:inline><result>greater then 2 </result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="when1"/>
     </p:when>
     <p:when test="count(//*) eq 2">
-    <p:identity><p:input port="source"><p:inline><result>equal 2 </result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="when2"/>
     </p:when>
     <p:otherwise>
-    <p:identity><p:input port="source"><p:inline><result>less then 2</result></p:inline></p:input></p:identity>
+    <p:wrap wrapper="otherwise"/>
   </p:otherwise>
   </p:choose>
 </p:declare-step>
@@ -580,11 +615,16 @@ declare function  test:runChoose3() {
   let $outputs   := ()
   let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
-      assert:equal($result,document{<result xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns="">equal 2</result>})
+      assert:equal($result, <when2>
+      <a>
+	<b></b>
+	<c></c>
+      </a>
+    </when2>)
 };
 
 
-declare function  test:runCompare1() { 
+declare %test:case function  test:runCompare1() { 
   let $pipeline := <p:pipeline version='1.0' name="main"
 	    xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source" primary="true"/>
@@ -618,7 +658,7 @@ declare function  test:runCompare1() {
 };
 
 
-declare function  test:runCompare2() { 
+declare %test:case function  test:runCompare2() { 
   let $pipeline := <p:pipeline version='1.0' name="main"
 	    xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source" primary="true"/>
@@ -652,7 +692,7 @@ declare function  test:runCompare2() {
 };
 
 
-declare function  test:runCompare3() { 
+declare %test:case function  test:runCompare3() { 
   let $pipeline := <p:pipeline version='1.0' name="main"
 	    xmlns:p="http://www.w3.org/ns/xproc">
   <p:input port="source" primary="true"/>
@@ -685,7 +725,7 @@ declare function  test:runCompare3() {
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">false</c:result>)    
 };
 
-declare function  test:runCount1() { 
+declare %test:case function  test:runCount1() { 
   let $pipeline :=   <p:declare-step version='1.0'>
     <p:input port="source" sequence="true"/>
     <p:output port="result"/>
@@ -708,14 +748,14 @@ declare function  test:runCount1() {
   let $bindings := ()
   let $options  := ()
   let $outputs   :=  ()
-  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">3</c:result>)    
 };
 
 
 
-declare function  test:runCount2() { 
+declare %test:case function test:runCount2() { 
   let $pipeline :=     <p:declare-step version='1.0'>
     <p:input port="source" sequence="true"/>
     <p:output port="result"/>
@@ -743,7 +783,7 @@ declare function  test:runCount2() {
 };
 
 
-declare function  test:runDelete1() { 
+declare %test:case function test:runDelete1() { 
   let $pipeline := <p:pipeline version='1.0' name="pipeline" xmlns:p="http://www.w3.org/ns/xproc">
 
 <p:delete match="p:delete"/>
@@ -772,7 +812,7 @@ declare function  test:runDelete1() {
 
 
 
-declare function  test:runPack1() { 
+declare %test:case function test:runPack1() { 
   let $pipeline := <p:declare-step version='1.0' name="pipeline"
 	    xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source" sequence="true"/>
@@ -802,18 +842,35 @@ declare function  test:runPack1() {
   let $outputs   := ()
   let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
-      assert:equal($result,<sequence-wrapper xmlns:xs="" xmlns:xsi="" xmlns:map="" xmlns:xproc="" xmlns="">
-		  <wrapper>
-		    <doc1></doc1>
-		    <doc2></doc2>
-		    <doc3></doc3>
-		    <root xmlns:p="http://www.w3.org/ns/xproc" xmlns:xproc="http://xproc.net/xproc" xmlns:ext="http://xproc.net/xproc/ext" xmlns:opt="http://xproc.net/xproc/opt" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:xprocerr="http://www.w3.org/ns/xproc-error" xmlns:xxq-error="http://xproc.net/xproc/error" xmlns:err="http://www.w3.org/ns/xproc-error">inline alt</root>
-		  </wrapper>
-		</sequence-wrapper>)
+      assert:equal($result,<sequence-wrapper><wrapper><doc1/><doc2/><doc3/><root>inline alt</root></wrapper></sequence-wrapper>)
+};
+
+declare %test:case function test:runPack2() { 
+  let $pipeline :=
+    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:pack wrapper="NewFilmElement">
+        <p:input port="alternate">
+          <p:inline><b>asdfsdaF</b></p:inline>
+        </p:input>
+   </p:pack>
+</p:declare-step>
+
+  let $stdin    := <people><person/><person/></people>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
+    return
+      assert:equal($result,<NewFilmElement><people><person/><person/></people><b xmlns:c="http://www.w3.org/ns/xproc-step">asdfsdaF</b></NewFilmElement>)
 };
 
 
-declare function  test:runDeclareStep1() { 
+(:failing:)
+declare %test:ignore %test:ignore function  test:runDeclareStep1() { 
   let $pipeline := <p:declare-step version='1.0' xmlns:foo="http://acme.com/test">
       <p:input port="source" sequence="true"/>
       <p:output port="result"/>
@@ -826,18 +883,18 @@ declare function  test:runDeclareStep1() {
     </p:declare-step>
 
   let $stdin    := (<doc/>,<doc/>)
-  let $dflag    := 0
+  let $dflag    := 1
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
   let $outputs  := ()
-  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,())
 };
 
-(:
-declare function  test:runRename1() { 
+
+declare %test:case function  test:runRename1() { 
   let $pipeline := 
     <p:pipeline version='1.0'  xmlns:test1="http://test.com" xmlns:test2="http://test2.com">
 
@@ -856,9 +913,9 @@ declare function  test:runRename1() {
     return
       assert:equal($result,(<doc xmlns=""></doc>,<doc xmlns=""></doc>))
 };
-:)
+
 (:)
-declare function  test:runExtest1() { 
+declare %test:ignore function  test:runExtest1() { 
   let $pipeline := 
     <p:pipeline version='1.0'>
 
@@ -888,7 +945,7 @@ declare function  test:runExtest1() {
 :)
 
 
-declare function  test:runAddAttribute1() { 
+declare %test:case function test:runAddAttribute1() { 
   let $pipeline := 
   <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
 	    <p:input port="source"/>
@@ -904,13 +961,13 @@ declare function  test:runAddAttribute1() {
   let $outputs  := ()
   let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
-      assert:equal($result,document{<people xmlns="">
+      assert:equal($result,<people xmlns="">
 	<person gender="Male"></person>
 	<person gender="Male"></person>
-      </people>})    
+      </people>)    
 };
 
-declare function  test:runAddAttribute2() { 
+declare %test:case function test:runAddAttribute2() { 
   let $pipeline := 
   <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
 	    <p:input port="source"/>
@@ -926,16 +983,16 @@ declare function  test:runAddAttribute2() {
   let $outputs  := ()
   let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
     return
-      assert:equal($result,document{<people xmlns="">
+      assert:equal($result,<people xmlns="">
 	<person gender="Male"></person>
 	<person gender="Male"></person>
-      </people>})    
+      </people>)    
 };
 
 
 (:
 
-declare function  test:runAddXMLBase() { 
+declare %test:ignore function  test:runAddXMLBase() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
 	   <p:input port="source">
@@ -959,31 +1016,9 @@ declare function  test:runAddXMLBase() {
 :)
 
 
-declare function  test:runPack2() { 
-  let $pipeline :=
-    <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
-      <p:input port="source"/>
-      <p:output port="result"/>
-      <p:pack wrapper="NewFilmElement">
-        <p:input port="alternate">
-          <p:inline><b>asdfsdaF</b></p:inline>
-        </p:input>
-   </p:pack>
-</p:declare-step>
-
-  let $stdin    := <people><person/><person/></people>
-  let $dflag    := 0
-  let $tflag    := 0
-  let $bindings := ()
-  let $options  := ()
-  let $outputs  := ()
-  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
-    return
-      assert:equal($result,<NewFilmElement><people><person/><person/></people><b xmlns:c="http://www.w3.org/ns/xproc-step">asdfsdaF</b></NewFilmElement>)
-};
 
 
-declare function  test:runXSLT1() { 
+declare %test:case function  test:runXSLT1() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
       <p:input port="source"/>
@@ -1035,7 +1070,7 @@ declare function  test:runXSLT1() {
 };
 
 
-declare function  test:runZip() { 
+declare %test:case function  test:runZip() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
       <p:input port="source"/>

@@ -33,17 +33,18 @@ declare namespace opt = "http://xproc.net/xproc/opt";
 declare namespace ext = "http://xproc.net/xproc/ext";
 declare namespace xxq-error = "http://xproc.net/xproc/error";
 
-declare namespace saxon ="http://test.org/saxon";
-
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 import module namespace mem = "http://xqdev.com/in-mem-update"
     at "/MarkLogic/appservices/utils/in-mem-update.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare option xdmp:output "method=xml";
+declare copy-namespaces no-preserve, no-inherit;
+
+(: declare option xdmp:output "method=xml";
 declare option xdmp:output "encoding=UTF8";
 declare option xdmp:output "indent=yes";
+:)
 
 (:~ set to 1 to enable debugging :)
 declare variable $u:NDEBUG := $const:NDEBUG;
@@ -108,8 +109,9 @@ declare function u:stopMap(){
 declare function u:putInputMap(
   $key as xs:string,
   $value as item()*
-){
-  try{
+) as item()*
+{
+  try{ 
     if($value) then
     xdmp:eval('
         import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
@@ -126,10 +128,11 @@ declare function u:putInputMap(
         for $v in $value
         return <u:entry id="{$key}">{$v}</u:entry>
         }</u:root>,(),("xproc"))',
-        (fn:QName("","value"),($value),
+        (fn:QName("","value"),$value,
          fn:QName("","key"), $key))
     else ()
-    }catch($e){ xdmp:log("problem with: " || $key )}
+    }catch($e){ if ($e/error:code eq "XDMP-ARG") then xdmp:log("problem with: " || $key ) else xdmp:rethrow() }
+
 };
 
 declare function u:getInputMap(
@@ -162,14 +165,18 @@ declare function u:strip-whitespace($xml){
 let $template := <xsl:stylesheet version="2.0">
 <xsl:strip-space elements="*"/> 
 
-<xsl:template match="@*|node()">
-    <xsl:copy>
-        <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
+<xsl:template match="element()">
+  <xsl:copy>
+    <xsl:apply-templates select="@*,node()"/>
+   </xsl:copy>
 </xsl:template>
 
+<xsl:template match="attribute()|comment()|processing-instruction()">
+  <xsl:copy/>
+</xsl:template>
+    
 <xsl:template match="text()">
-<xsl:value-of select="replace(.,'&#xa;','')"/>
+    <xsl:value-of select="normalize-space(.)"/>
 </xsl:template>
 
 </xsl:stylesheet>
@@ -314,13 +321,15 @@ $steps[1]])
 (: -------------------------------------------------------------------------- :)
 declare function u:transform($stylesheet,$xml){
 (: -------------------------------------------------------------------------- :)
-if ($xml) then xdmp:xslt-eval($stylesheet, $xml ) else ()
+    if ($xml instance of document-node())
+    then xdmp:xslt-eval($stylesheet, $xml )
+    else xdmp:xslt-eval($stylesheet, document{$xml} ) 
 };
 
 (: -------------------------------------------------------------------------- :)
 declare function u:transform($stylesheet,$xml,$data){
 (: -------------------------------------------------------------------------- :)
-xdmp:xslt-eval($stylesheet, $xml )
+u:transform($stylesheet, $xml )
 };
 
 
@@ -332,7 +341,9 @@ xdmp:xslt-eval($stylesheet, $xml )
 (: -------------------------------------------------------------------------- :)
 declare function u:outputResultElement($exp){
 (: -------------------------------------------------------------------------- :)
-    <c:result>{$exp}</c:result>
+    element c:result{
+        $exp
+    }
 };
 
 (: -------------------------------------------------------------------------- :)
@@ -475,28 +486,21 @@ declare function u:declare-ns($namespaces){
 
 
 declare function u:namespaces-in-use( $root as node()? )  {
-       
-for $ns in distinct-values(
-      $root/descendant-or-self::*/(.)/in-scope-prefixes(.))
-
-return
-  if($ns ne 'xml' or $ns ne '' or namespace-uri-for-prefix($ns,$root) ne '') then
-  <ns prefix="{$ns}" URI="{namespace-uri-for-prefix($ns,$root)}"/>
-  else
-    ()
- } ;
+let $element := if ($root instance of document-node()) then $root/* else $root       
+for $ns in distinct-values($element/descendant-or-self::*/(.)/in-scope-prefixes(.))
+    return
+    if($ns eq 'xml' or $ns eq '')
+    then () 
+    else <ns prefix="{$ns}" URI="{namespace-uri-for-prefix($ns,$element)}"/>
+} ;
 
 declare function u:enum-ns($element){
-
-
-  
        for $child in $element/node()
             return
               if ($child instance of element() or $child instance of document-node()) then
                	 u:namespaces-in-use($child)
                 else
                   ()
-
 };
 
 

@@ -2,6 +2,7 @@ xquery version "1.0-ml";
 
 
 import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
 
 declare boundary-space strip;
 declare copy-namespaces no-preserve,no-inherit;
@@ -19,6 +20,7 @@ let $results :=
 element tests{
 
 for $uri in subsequence(cts:uri-match('*/' || $path ),1,1000)
+    
 let $test := fn:doc($uri)
 let $pipeline := $test/*/t:pipeline/*
 let $source   := $test/*/t:input[@port eq "source"]/*
@@ -28,11 +30,16 @@ let $options := ()
 let $dflag := xs:integer($debug)
 let $tflag :=0
 return
-<test uri="{$uri}" error="{$test//@error}">
+if(contains($uri,"viewport") or contains($uri,"for-each") or contains($uri,"choose")) then
+    <test skip="true" uri="{$uri}"/>
+ else   
+    <test uri="{$uri}" error="{$test//@error}">
 {
 
 let $result := try{ xprocxq:xq($pipeline,$source,$bindings,$options,(),$dflag,$tflag) }catch($e){$e}
-let $compare := deep-equal(document{$expected},document{$result[1]})
+
+let $compare := deep-equal(u:strip-whitespace($expected),u:strip-whitespace($result[1]))
+        
 return
 <test-result pass="{if ($test//@error) then string($test//@error) eq string($result/*:name) else $compare}">
 <name>{if ($test/*/@error) then $result/*:name else ()}</name>

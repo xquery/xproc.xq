@@ -6,43 +6,43 @@ import module namespace assert = "http://github.com/robwhitby/xray/assertions" a
 
 import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
 
-declare function test:loadModule() { 
+declare %test:case function test:loadModule() { 
   assert:equal($const:init_unique_id, '!1')
 };
 
-declare function test:checkVersion() { 
+declare %test:case function test:checkVersion() { 
   assert:equal($const:version, '1.0')
 };
 
-declare function test:checkProductVersion() { 
+declare %test:case function test:checkProductVersion() { 
   assert:equal($const:product-version, '1.0')
 };
 
-declare function test:checkProductVersioName() { 
+declare %test:case function test:checkProductVersioName() { 
   assert:equal($const:product-name, 'xproc.xq')
 };
 
-declare function test:checkVendor() { 
+declare %test:case function test:checkVendor() { 
   assert:equal($const:vendor, 'James Fuller')
 };
 
-declare function test:checkLanguage() { 
+declare %test:case function test:checkLanguage() { 
   assert:equal($const:language, 'en')
 };
 
-declare function test:checkVendorURI() { 
+declare %test:case function test:checkVendorURI() { 
   assert:equal($const:vendor-uri, 'http://www.xproc.net')
 };
 
-declare function test:checkXpathVersion() { 
+declare %test:case function test:checkXpathVersion() { 
   assert:equal($const:xpath-version, '2.0')
 };
 
-declare function test:checkPsviSupported() { 
+declare %test:case function test:checkPsviSupported() { 
   assert:equal($const:psvi-supported, 'false')
 };
 
-declare function test:checkXSLTVersion() { 
+declare %test:case function test:checkXSLTVersion() { 
   assert:equal($const:xslt-version, 2.0)
 };
 

@@ -6,31 +6,31 @@ import module namespace assert = "http://github.com/robwhitby/xray/assertions" a
          
 import module namespace ext = "http://xproc.net/xproc/ext" at "/xquery/steps/ext.xqy";
     
-declare function test:loadModuleTest() { 
+declare %test:case function test:loadModuleTest() { 
   let $actual := <test/>
   return
     assert:equal($actual,<test/>) 
 };
 
-declare function test:pre() { 
+declare %test:case function test:pre() { 
   let $actual := ext:pre(<test/>,(),(),())
   return
     assert:equal($actual,<test xmlns=""></test>)
 };
 
-declare function  test:post() { 
+declare %test:case function  test:post() { 
   let $actual := ext:post(<test/>,(),(),())
   return
     assert:equal($actual,<test xmlns=""></test>)
 };
 
-declare function  test:xproc() { 
+declare %test:case function  test:xproc() { 
   let $actual := ext:xproc(<test/>,(),(),())
   return
     assert:equal($actual,())
 };
 
-declare function  test:xsltforms() { 
+declare %test:case function  test:xsltforms() { 
   let $actual := ext:xsltforms(<test/>,(),(),())
   return
     assert:equal($actual,())

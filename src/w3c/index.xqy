@@ -1,10 +1,7 @@
 xquery version "1.0-ml";
 
-declare boundary-space strip;
-declare copy-namespaces no-preserve,no-inherit;
-
-
 import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+import module namespace     u  = "http://xproc.net/xproc/util"   at "/xquery/core/util.xqy";
 
 declare namespace t="http://xproc.org/ns/testsuite"; 
 declare namespace p="http://www.w3.org/ns/xproc";
@@ -26,7 +23,7 @@ return
 {
 try{
 let $result := xprocxq:xq($pipeline,$source,$bindings,$options,(),$dflag,$tflag) 
-let $compare := deep-equal(document{$source[1]},document{$result[1]})
+let $compare := deep-equal(u:strip-whitespace($source),u:strip-whitespace($result))
 return
 <test-result pass="{$compare}"></test-result>
 

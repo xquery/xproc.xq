@@ -31,6 +31,8 @@ declare namespace ext = "http://xproc.net/xproc/ext";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
+declare copy-namespaces no-preserve,no-inherit;
+
 (:~ output:seriaize - serializes output 
  :
  : @param $result - all outputs from the result of processing pipeline

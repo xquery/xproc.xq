@@ -25,12 +25,13 @@ let $test := fn:doc($uri)
 let $pipeline := $test/*/t:pipeline/*
 let $source   := $test/*/t:input[@port eq "source"]/*
 let $expected   :=$test/*/t:output[@port eq "result"]/*
-let $bindings := ()
+let $bindings := if ($test/*/t:input[@port eq "alternate"]) then
+    <binding name="alternate">{$test/*/t:input[@port eq "alternate"]/*}</binding> else ()
 let $options := ()
 let $dflag := xs:integer($debug)
 let $tflag :=0
 return
-if(contains($uri,"viewport") or contains($uri,"for-each") or contains($uri,"choose")) then
+if(contains($uri,"viewport") or contains($uri,"for-each")) then
     <test skip="true" uri="{$uri}"/>
  else   
     <test uri="{$uri}" error="{$test//@error}">

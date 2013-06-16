@@ -24,8 +24,22 @@ declare function  test:loadModuleTest() {
     assert:equal($actual,<test/>) 
 };
 
+declare %test:case function test:enumNSTest1() { 
+  let $pipeline := <test xmlns:test1="http://www.test.org/1">
+    <a xmlns:test2="http://www.test.org/2"/>
+    <b xmlns:test3="http://www.test.org/3"/>
+    </test>
+    
+  let $result := xproc:enum-namespaces($pipeline)
+  return
+    assert:equal($result,    <namespace name="" xmlns="">
+      <ns prefix="cx">http://xmlcalabash.com/ns/extensions</ns>
+      <ns prefix="c">http://www.w3.org/ns/xproc-step</ns>
+      <ns prefix="p">http://www.w3.org/ns/xproc</ns>
+    </namespace>)
+};
 
-declare %test:case function test:enumNSTest() { 
+declare %test:case function test:enumNSTest2() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xprocxq_new/src/test/data/submit-test-report.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -40,7 +54,7 @@ declare %test:case function test:enumNSTest() {
 };
 
 
-declare %test:case function test:enumNSTest1() { 
+declare %test:case function test:enumNSTest3() { 
   let $pipeline :=  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0" xmlns:h="http://www.w3.org/1999/xhtml">
       <p:input port="source"/>
       <p:output port="result"/>
@@ -223,7 +237,7 @@ declare %test:case function test:runEntryPointTest4() {
       assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">1</c:result>)
 };
 
-declare %test:ignore function  test:runDynamicError() { 
+declare %test:case function  test:runDynamicError() { 
   let $pipeline := xdmp:document-get('file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/error.xpl',<options xmlns="xdmp:document-get">
            <repair>full</repair>
            <format>xml</format>
@@ -364,7 +378,7 @@ declare %test:case function  test:runTryCatch2() {
 
 
 (:
-declare %test:ignore %test:ignore function test:runForEach1() { 
+declare %test:ignore function test:runForEach1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source"/>
   <p:output port="result" sequence="true"/>
@@ -409,7 +423,6 @@ declare %test:ignore %test:ignore function test:runForEach1() {
 	<a>9</a>
       </wrap>))
 };
-
 
 declare %test:ignore %test:ignore function test:runForEach2() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
@@ -870,7 +883,7 @@ declare %test:case function test:runPack2() {
 
 
 (:failing:)
-declare %test:ignore %test:ignore function  test:runDeclareStep1() { 
+declare %test:case function  test:runDeclareStep1() { 
   let $pipeline := <p:declare-step version='1.0' xmlns:foo="http://acme.com/test">
       <p:input port="source" sequence="true"/>
       <p:output port="result"/>
@@ -883,7 +896,7 @@ declare %test:ignore %test:ignore function  test:runDeclareStep1() {
     </p:declare-step>
 
   let $stdin    := (<doc/>,<doc/>)
-  let $dflag    := 1
+  let $dflag    := 0
   let $tflag    := 0
   let $bindings := ()
   let $options  := ()
@@ -894,7 +907,7 @@ declare %test:ignore %test:ignore function  test:runDeclareStep1() {
 };
 
 
-declare %test:case function  test:runRename1() { 
+declare %test:case function test:runRename1() { 
   let $pipeline := 
     <p:pipeline version='1.0'  xmlns:test1="http://test.com" xmlns:test2="http://test2.com">
 
@@ -989,14 +1002,11 @@ declare %test:case function test:runAddAttribute2() {
       </people>)    
 };
 
-
-(:
-
 declare %test:ignore function  test:runAddXMLBase() { 
   let $pipeline :=
     <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" version="1.0">
 	   <p:input port="source">
-	      <p:document href="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"/>
+	      <p:document href="/content/Users/jfuller/Source/Webcomposite/xprocxq/src/test/tests.xproc.org/doc/chaps/div.xml"/>
 	   </p:input>
 	   <p:output port="result"/>
 	   <p:add-xml-base/>
@@ -1012,11 +1022,6 @@ declare %test:ignore function  test:runAddXMLBase() {
     return
       assert:equal($result,document{<people xml:base="file:///Users/jfuller/Source/Webcomposite/xproc.xq/src/test/data/people.xml"><person/><person/></people>})    
 };
-
-:)
-
-
-
 
 declare %test:case function  test:runXSLT1() { 
   let $pipeline :=

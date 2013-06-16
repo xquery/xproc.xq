@@ -167,16 +167,15 @@ function xproc:choose(
   
 let $namespaces := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
-let $xpath-context as element(p:xpath-context) := $currentstep/ext:pre/p:xpath-context[1]
-let $xpath-context-select as xs:string :=string($xpath-context/@select)
-let $xpath-context-binding := $xpath-context[1]/node()[1]
+let $xpath-context as element(p:xpath-context) := $currentstep/ext:pre/p:xpath-context
+let $xpath-context-select as xs:string := "/"
+let $xpath-context-binding := $primary
 let $xpath-context-data := $primary
-let $context := if ($primary ne '') then u:evalXPATH($xpath-context-select,document{$primary})
-                else u:evalXPATH($xpath-context-select,document{$xpath-context})
-let $when-test := for $when at $count in $currentstep/p:when
+let $context := $primary
+let $when-test := () (: for $when at $count in $currentstep/p:when
           let $check-when-test := u:assert(not($when/@test eq ''),"p:choose when test attribute cannot be empty")
           return
-             if ( u:value($primary,$when/@test)) then $count else ()
+             if ( u:value($primary,$when/@test)) then $count else () :)
 return
   if($when-test) then
     let $when-sorted :=  parse:pipeline-step-sort( $currentstep/p:when[$when-test]/node()  , () )
@@ -652,6 +651,7 @@ let $result :=  u:evalXPATH(string($pinput/@select),$data)
 {
    let $steps := xproc:genstepnames($ast)
    let $_ := u:putInputMap($ast/@xproc:default-name || "#source",$stdin) 
+   let $_ := for $bind in $bindings return u:putInputMap($ast/@xproc:default-name || "#" || $bind/@name,$bind/*) 
    return
      xproc:stepFoldEngine(
        $ast,
@@ -783,12 +783,20 @@ declare function xproc:genExtPost(
  declare function xproc:enum-namespaces($pipeline) as element(namespace){
  (: ------------------------------------------------------------------------------------------------------------- :)
     <namespace name="{$pipeline/@name}">{
-let $element := if ($pipeline instance of document-node()) then $pipeline/* else $pipeline       
-for $ns in distinct-values($element/descendant-or-self::*/(.)/in-scope-prefixes(.))
+let $element := if ($pipeline instance of document-node()) then $pipeline/* else $pipeline
+
+(:
+for $el in $element//*
 return
-  if ($ns eq 'xml' or $ns eq '')
+for $ns in in-scope-prefixes($el)
+return
+<ns prefix="{$ns}">{if(namespace-uri-for-prefix($ns,$el)) then namespace-uri-for-prefix($ns,$el) else "test"}</ns>        
+:)
+for $ns in distinct-values($element//*/in-scope-prefixes(.))
+return
+        if ($ns eq 'xml' or $ns eq '' or empty(namespace-uri-for-prefix($ns,$element)))
         then ()
         else <ns prefix="{$ns}">{try{namespace-uri-for-prefix($ns,$element)}catch * { $err:description, $err:value, " module: ",
     $err:module, "(", $err:line-number, ",", $err:column-number, ")"}}</ns>
         }</namespace>
- };
+};

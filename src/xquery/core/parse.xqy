@@ -560,7 +560,7 @@ return
                        attribute xproc:func {"ext:pre#4"},
                        parse:input-port($node/p:input, $step-definition),
                        parse:output-port($node/p:output, $step-definition),
-                       $node/p:xpath-context
+                       parse:xpath-context($node/p:xpath-context, $step-definition)
                      },
                      parse:AST($node/*[@xproc:type ne 'comp'])
                    }

@@ -37,7 +37,10 @@ declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 
 declare function std:ns-for-xslt($primary,$ns){
- (     (namespace {"xproc"} {"http://xproc.net/xproc"},
+
+ let $_ := u:log($ns)
+ return   
+ ( (namespace {"xproc"} {"http://xproc.net/xproc"},
 namespace {"p"} {"http://www.w3.org/ns/xproc"},
 namespace {"c"} {"http://www.w3.org/ns/xproc-step"},
 namespace {"err"} {"http://www.w3.org/ns/xproc-error"}
@@ -69,30 +72,27 @@ let $attribute-prefix := u:get-option('attribute-prefix',$options,$primary)
 let $attribute-namespace := u:get-option('attribute-namespace',$options,$primary)
 let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary,$ns)}
-{$const:xslt-output}
-{for $option in $options[@name]
-return
-<xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
+    {$const:xslt-output}
+    {for $option in $options[@name]
+        return
+        <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
-
-<xsl:template match="@*|node()">
+<xsl:template match="{$match}">
   <xsl:copy>
-    <xsl:apply-templates select="@*|node()"/>
-  </xsl:copy>
-</xsl:template>
-    
-    
- <xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}">
-  <xsl:copy>
-    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates select="@*[not(local-name(.) eq '{$attribute-name}')]"/>
     <xsl:attribute name="{$attribute-name}" select="'{$attribute-value}'"/>
-    <xsl:apply-templates select="@*|node()"/>
+    <xsl:apply-templates select="node()"/>
   </xsl:copy>
 </xsl:template>
 
+<xsl:template match="element()">
+  <xsl:copy>
+    <xsl:apply-templates select="@*,node()"/>
+   </xsl:copy>
+</xsl:template>
 
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
-   <xsl:copy/>
+  <xsl:copy/>
 </xsl:template>
     
 </xsl:stylesheet>      
@@ -186,12 +186,16 @@ let $template := <xsl:stylesheet version="{$const:xslt-version}">
 }
 <xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}"/>
 
-<xsl:template match="@*|node()"><xsl:copy><xsl:apply-templates select="@*|node()"/></xsl:copy></xsl:template>
+<xsl:template match="element()">
+  <xsl:copy>
+    <xsl:apply-templates select="@*,node()"/>
+   </xsl:copy>
+</xsl:template>
 
-<xsl:template match="attribute()|text()|comment()|processing-instruction()"><xsl:copy/></xsl:template>
-
+<xsl:template match="attribute()|text()|comment()|processing-instruction()">
+  <xsl:copy/>
+</xsl:template>
 </xsl:stylesheet>
-let $_ := u:log($template)
 return
   u:transform($template,$primary)
 
@@ -937,11 +941,11 @@ let $charset      := u:get-option('charset',$options,$primary)
 let $namespace    := u:get-option('namespace',$options,$primary)
 return
 
-
+  
   element{name(($primary/*,$primary)[1])}{
-  for $n in $ns return
+(:  for $n in $ns return
         namespace {$n/@prefix} {$n/@URI}
-  ,
+  ,:)
    u:parse($primary)
   }
 

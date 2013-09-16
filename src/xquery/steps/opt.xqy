@@ -14,25 +14,29 @@
 
 xquery version "3.0" encoding "UTF-8";
 
-(: ------------------------------------------------------------------------------------- 
+(: ---------------------------------------------------------------------------
 
-	opt.xqm - Implements all xproc optional steps.
-	
----------------------------------------------------------------------------------------- :)
+opt.xqm - Implements all xproc optional steps.
+
+----------------------------------------------------------------------------- :)
 
 module namespace opt = "http://xproc.net/xproc/opt";
+
+import module namespace const = "http://xproc.net/xproc/const"
+  at "/xquery/core/const.xqy";
+
+import module namespace u = "http://xproc.net/xproc/util"
+  at "/xquery/core/util.xqy";
 
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
-import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
-
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare copy-namespaces no-preserve, no-inherit;
+
 
 (: -------------------------------------------------------------------------- :)
 declare
@@ -112,7 +116,7 @@ declare
 %xproc:step
 function opt:xquery($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
-let $query := u:getInputMap($secondary/@step || "#query") 
+let $query := u:getInputMap($secondary/@step/data(.) || "#query")
 return u:xquery($query/text(),$primary,$options[@name])
 };
 
@@ -127,7 +131,10 @@ let $command          := u:get-option('command',$options,$primary)
 let $return-manifest  := u:get-option('return-manifest',$options,$primary)
 let $opts             := u:get-option('options',$options,$primary)
 return
-    <c:result href="{$href}" command="{$command}" return-manifest="{$return-manifest}" options="{$opts}"></c:result>
+    <c:result href="{$href}"
+      command="{$command}"
+      return-manifest="{$return-manifest}"
+      options="{$opts}"></c:result>
 };
 
 (: -------------------------------------------------------------------------- :)

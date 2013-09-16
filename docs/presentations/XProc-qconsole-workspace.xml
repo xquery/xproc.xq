@@ -1,0 +1,109 @@
+<export><workspace name="XProc"><query name="xproc-simple" focus="false" active="true" mode="xquery">xquery version "3.0";
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq"; 
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline := &lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" version="1.0"&gt; 
+&lt;p:identity&gt;
+&lt;p:input port="source"/&gt; 
+&lt;/p:identity&gt;
+&lt;p:count limit="10"/&gt; 
+&lt;/p:pipeline&gt;
+
+let $stdin :=  (&lt;doc&gt;&lt;p&gt;mary had a little lamb&lt;/p&gt;&lt;/doc&gt;,&lt;doc&gt;&lt;p&gt;a&lt;/p&gt;&lt;/doc&gt;)
+let $bindings := () 
+let $options := ()
+let $outputs := ()
+let $dflag := 0
+let $tflag := 0
+return
+xprocxq:xq($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)</query><query name="xproc-simple-debug" focus="false" active="true" mode="xquery">xquery version "3.0";
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq"; 
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline := &lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" version="1.0"&gt; 
+&lt;p:identity&gt;
+&lt;p:input port="source"/&gt; 
+&lt;/p:identity&gt;
+&lt;p:count limit="10"/&gt; 
+&lt;/p:pipeline&gt;
+
+let $stdin :=  (&lt;doc&gt;&lt;p&gt;mary had a little lamb&lt;/p&gt;&lt;/doc&gt;,&lt;doc&gt;&lt;p&gt;a&lt;/p&gt;&lt;/doc&gt;)
+let $bindings := () 
+let $options := ()
+let $outputs := ()
+let $dflag := 1
+let $tflag := 0
+return
+xprocxq:xq($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)</query><query name="run step from xquery" focus="false" active="true" mode="xquery">xquery version "3.0";
+import module namespace std = "http://xproc.net/xproc/std" at "/xquery/steps/std.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc"; 
+declare namespace xproc = "http://xproc.net/xproc";
+
+std:count( (&lt;test&gt;&lt;a&gt;test&lt;/a&gt;&lt;/test&gt;, &lt;test/&gt;),
+       (),
+       &lt;xproc:options&gt; 
+          &lt;p:with-option name="limit" select="1000"/&gt; 
+       &lt;/xproc:options&gt;,
+       ())</query><query name="BYOSR-1" focus="false" active="true" mode="xquery">xquery version "3.0";
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+import module namespace xproc = "http://xproc.net/xproc" at "/xquery/core/xproc-impl.xqy";
+import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline :=	&lt;p:declare-step version='1.0'&gt; 
+&lt;p:input port="source" sequence="true"/&gt; 
+&lt;p:output port="result"/&gt; 
+&lt;p:count/&gt;
+&lt;/p:declare-step&gt;
+
+let $stdin	:= (&lt;document&gt; &lt;doc xmlns=""/&gt;&lt;/document&gt;, &lt;document&gt; &lt;doc xmlns=""/&gt; &lt;/document&gt;, &lt;document&gt;&lt;doc xmlns=""/&gt; &lt;/document&gt;) 
+let $dflag	:= 0 
+return xprocxq:xq($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)</query><query name="BYOSR-2" focus="false" active="true" mode="xquery">xquery version "3.0";
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+import module namespace xproc = "http://xproc.net/xproc" at "/xquery/core/xproc-impl.xqy";
+import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline :=	&lt;p:declare-step version='1.0'&gt; 
+&lt;p:input port="source" sequence="true"/&gt; 
+&lt;p:output port="result"/&gt; 
+&lt;p:count/&gt;
+&lt;/p:declare-step&gt;
+
+let $stdin	:= (&lt;document&gt; &lt;doc xmlns=""/&gt;&lt;/document&gt;, &lt;document&gt; &lt;doc xmlns=""/&gt; &lt;/document&gt;, &lt;document&gt;&lt;doc xmlns=""/&gt; &lt;/document&gt;) 
+let $dflag	:= 0 
+return
+xprocxq:xq($pipeline,$stdin,(),(),(),$dflag,0,
+           function($step,$namespaces,$input,$ast){
+             $xproc:eval-step-func($step,$namespaces,$input,$ast)
+           })
+
+</query><query name="BYOSR-3" focus="true" active="true" mode="xquery">xquery version "1.0-ml";
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+import module namespace xproc = "http://xproc.net/xproc" at "/xquery/core/xproc-impl.xqy";
+import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline :=	&lt;p:declare-step version='1.0'&gt; 
+&lt;p:input port="source" sequence="true"/&gt; 
+&lt;p:output port="result"/&gt; 
+&lt;p:count/&gt;
+&lt;/p:declare-step&gt;
+
+let $stdin	:= (&lt;document&gt; &lt;doc xmlns=""/&gt;&lt;/document&gt;, &lt;document&gt; &lt;doc xmlns=""/&gt; &lt;/document&gt;, &lt;document&gt;&lt;doc xmlns=""/&gt; &lt;/document&gt;) 
+let $dflag	:= 0 
+return
+xprocxq:xq($pipeline,$stdin,(),(),(),$dflag,0,
+           function($step,$namespaces,$input,$ast){
+             let $log := xdmp:log($step)
+             return
+             $xproc:eval-step-func($step,$namespaces,$input,$ast)
+           })
+
+</query></workspace></export>

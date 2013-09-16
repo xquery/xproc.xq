@@ -1,0 +1,1770 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://www.oasis-open.org/docbook/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://www.oasis-open.org/docbook/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<article xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="5.0">
+    <info>
+        <title>xproc.xq - Architecture of an XProc processor</title>
+        <author>
+            <personname><firstname>James</firstname><surname>Fuller</surname></personname>
+            <affiliation>
+                <jobtitle>Senior Engineer, MarkLogic</jobtitle>
+            </affiliation>
+        </author>
+        <abstract>
+            <para>XProc is a markup language that describes processing pipelines which are composed
+                of discrete steps that apply operations on sets of XML documents. This paper details
+                out the architecture, model and process flow of xproc.xq, an XProc processor,
+                implemented using XQuery 3.0. </para>
+        </abstract>
+    </info>
+    <sect1 xml:id="intro">
+        <title>Introduction</title>
+        <para>This article provides an in-depth overview of the primary architectural components of
+            xproc.xq, an <link linkend="xproc-spec">XProc</link> processor which has been built
+            using XQuery 3.0, on top of the MarkLogic database. Where there is time I highlight some
+            of the more novel aspects of the system and provide background on key design
+            decisions.</para>
+        <para>The goals of developing xproc.xq (as with most of my open source work) are of an
+            entirely selfish nature; <itemizedlist>
+                <listitem>
+                    <para>Testbed XProc implementation for experimentation</para>
+                </listitem>
+                <listitem>
+                    <para>Learn about XQuery and functional programming development 'in the
+                        large'</para>
+                </listitem>
+                <listitem>
+                    <para>Observe performance characteristics of XProc within database context
+                    </para>
+                </listitem>
+            </itemizedlist></para>
+    </sect1>
+    <sect1>
+        <title>XProc Background</title>
+        <para>The ubiquity of XML creates the need for programmers to be able to implement complex,
+            scalable and extensible processing work flows which work on sets of XML documents using
+            the broad and deep stack of XML technologies available today. <link linkend="xproc-spec"
+                >XProc</link>, the XML Pipeline language defined by the W3C, attempts to provide
+            developers with a tool that helps create complex document work flows using a declarative
+            description in the form of pipelines. </para>
+        <para>A pipeline is a well worn abstraction in computing, yet loosely defined. For our
+            purposes, we define pipelines as a declarative model that prescribes a set of operations
+            which are to be applied to a set of XML documents. Each operation has a consistent data
+            interface allowing for the flow of XML documents generating data for the next operation
+            to consume.</para>
+        <para>Our first example shows how XProc describes a pipeline using XML markup.</para>
+        <para>
+            <example xml:id="intro-prog-listing">
+                <title>XProc simple example</title>
+                <programlisting>&lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" 
+            version="1.0" 
+            mylimit="10">
+&lt;p:identity>    
+    &lt;p:input port="source" select="//p"/> 
+&lt;/p:identity>       
+&lt;p:count limit="$mylimit"/>
+&lt;/p:pipeline></programlisting>
+            </example>
+        </para>
+        <para>An XProc processor consumes the pipeline and applies processing to XML document(s)
+            supplied as input. The example pipeline copies document(s) using the
+                <code>p:identity</code> step then counts how many document(s) there are with the
+                <code>p:count</code> step. </para>
+        <para>Having a declarative definition of a work flow, separates the <emphasis role="italic"
+                >how to process</emphasis> from the <emphasis role="italic">what to
+                process</emphasis>, leaving the XProc processor free to handle the '<emphasis
+                role="italic">how</emphasis>' as implementation details and pipeline authors to
+            describe the '<emphasis role="italic">what'</emphasis> to process with a catalog of
+            operations. For those who have never experienced XProc I will pass over over many of the
+            finer details of this example for now, but I revisit in the <link
+                linkend="xproc-refresher">XProc refresher</link> section.</para>
+        <para>Unix pipelines are the oft quoted analogy when explaining XProc. Unix pipelines work
+            by allowing each individual shell command to consume and emit lines of text data. Such a
+            consistent data interface is similarly found in XProc's ability to generate and consume
+            XML, though its important to note that in Unix pipes, shell commands work on each line
+            of text versus an entire document. </para>
+        <para>Much of the utility of Unix pipes comes from the fact that there are a lot of useful
+            shell commands, correspondingly XProc comes with a large set of built in steps as well
+            as the facility to create your own steps. We could extend the analogy by observing that
+            shell commands share a consistent selection language in the form of regular expressions
+            where XProc leverages XPath. </para>
+        <para> If you work with XML today, its likely that you've encountered or already built your
+            own ad-hoc pipelines using your favourite XML processor. XProc simply formalises what
+            could be viewed as the natural evolution from Unix pipeline 'line by line' text
+            processing to a richer, more complex work flow style of document processing. This frees
+            up the other XML technologies to focus on what they are good at and for XProc to act as
+            the 'main control loop', orchestrating work flow processes at a higher level of
+            abstraction.</para>
+        <sect2>
+            <title>Goals</title>
+            <para xml:id="p5">The XProc specification lists out twenty+ goals, embodying the guiding
+                principles for development of the language. </para>
+            <para>I've taken the liberty to summarise into the following list;</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The language must be expressed as declarative XML and be rich enough to
+                        address practical interoperability concerns but concise</para>
+                </listitem>
+                <listitem>
+                    <para>The language must allow the inputs, outputs, and other parameters of a
+                        components to be specified with information passed between steps using
+                        XML</para>
+                </listitem>
+                <listitem>
+                    <para>The language must define the basic minimal set of mandatory input
+                        processing options and associated error reporting options required to
+                        achieve interoperability.</para>
+                </listitem>
+                <listitem>
+                    <para>Given a set of components and a set of documents, the language must allow
+                        the order of processing to be specified.</para>
+                </listitem>
+                <listitem>
+                    <para>Agnostic in terms of parallel, serial or streaming processing</para>
+                </listitem>
+                <listitem>
+                    <para>The model should be extensible enough so that applications can define new
+                        processes and make them a component in a pipeline.</para>
+                </listitem>
+                <listitem>
+                    <para>The model could allow iteration and conditional processing which also
+                        allow selection of different components as a function of run-time
+                        evaluation.</para>
+                </listitem>
+            </itemizedlist>
+        </sect2>
+        <sect2>
+            <title>History</title>
+            <para>Pipelines in computing are an old concept, and in work flow processing similarly
+                ancient for markup languages. </para>
+            <para>As far back as 2004, a W3C Note set out requirements for an XML processing
+                    model:<link linkend="xproc-use-case-note"> "XML Processing Model Requirements,"
+                    W3C Working Group Note 05 April 2004</link>. </para>
+            <para>The following year, in 2005, another W3C member submission was proposed: <link
+                    linkend="xproc-member-submission-xpl">"XML Pipeline Language (XPL) Version 1.0"
+                    (draft), submitted by Orbeon, Inc., on 11 March and published on 11
+                    April.</link>
+            </para>
+            <para>It was identified as a goal to promote an interoperable and standard approach to
+                the processing of XML documents and the working group started meetings late
+                2005.</para>
+            <para>A set of <link linkend="xproc-use-cases">use cases were developed and published in
+                    2006</link> and work on the spec itself proceeded.</para>
+            <para>Several interim draft candidates were developed, with the WG editor, Norman Walsh
+                and member Vojtech Toman developing in parallel reference implementations.</para>
+            <para>As is typical with any specification process, it took XProc much longer to achieve
+                W3C Recommendation status, ratified in <link linkend="xproc-spec">May
+                2010</link>.</para>
+        </sect2>
+        <sect2>
+            <title xml:id="xproc-refresher">Brief refresher</title>
+            <para>An XProc pipeline document has a document root element of p:pipeline or
+                p:declare-step which contains one or several steps. Steps are either implicitly or
+                explicitly connected with documents flowing between them. Each step type determines
+                the kind of processing it does on documents.</para>
+            <para>The example shown in the <link linkend="intro-prog-listing">Introduction</link>
+                section , illustrated how XProc describes a pipeline.</para>
+            <para>
+                <programlisting>&lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" 
+            version="1.0" 
+            mylimit="10">
+&lt;p:identity>    
+    &lt;p:input port="source" select="//p"/> 
+&lt;/p:identity>       
+&lt;p:count limit="$mylimit"/>
+&lt;/p:pipeline></programlisting>
+            </para>
+            <para>At first glance, you maybe able to deduce that this is a pipeline that has two
+                components ('steps' is the XProc term); an identity step which copies an XML
+                document and a count step that counts the number of documents being passed to it
+                from the p:identity step, but with the twist that it p:count stops counting once it
+                hits a certain limit . </para>
+            <para>What is not entirely clear with this example is; </para>
+            <para>
+                <blockquote>
+                    <para>What defines the starting set of XML document(s) ?</para>
+                </blockquote>
+                <blockquote>
+                    <para>How do documents <emphasis role="italic">know</emphasis> how to flow from
+                        step to step ? What connects them ?</para>
+                </blockquote>
+                <blockquote>
+                    <para>What does it <emphasis role="italic">mean</emphasis> that
+                            <code>p:identity</code> child p:input has a select attribute xpath value
+                        of '//p' ?</para>
+                </blockquote>
+                <blockquote>
+                    <para>How does the <code>p:pipeline</code> attribute <code>@mylimit</code>
+                        define a reusable value that <code>p:count</code> uses within its own limit
+                        attribute ? </para>
+                </blockquote>
+            </para>
+            <para>We can rewrite this pipeline to be more explicit, which answers some of our
+                questions. </para>
+            <para>
+                <programlisting xml:id="explicit-pipeline">&lt;p:declare-step name="mypipeline" 
+                xmlns:p="http://www.w3.org/ns/xproc" 
+                version="1.0">
+    &lt;p:input port="source" primary="true" sequence="true"/>
+    &lt;p:output port="result" primary="true" sequence="true">
+      &lt;p:pipe step="mycount" port="result"/>
+    &lt;/p:output>
+    &lt;p:option name="mylimit" select="10"/>
+    &lt;p:identity name="myidentity">    
+      &lt;p:input port="source" select="//p">
+        &lt;p:pipe step="mypipeline" port="source"/>
+      &lt;/p:input>
+    &lt;/p:identity>
+    &lt;p:count name="mycount">
+      &lt;p:input port="source">
+        &lt;p:pipe step="myidentity" port="result"/>
+      &lt;/p:input>
+      &lt;p:with-option name="limit" select="$mylimit">
+       &lt;p:empty/>
+     &lt;/p:with-option>
+    &lt;/p:count>
+&lt;/p:declare-step></programlisting>
+            </para>
+            <para>Documents come in from the '<emphasis role="italic">outside</emphasis> world' via
+                the primary p:input child defined under p:declare-step. The p:pipeline was a kind of
+                shorthand alias for the more general p:declare-step step which incidently is also
+                used to define new steps. </para>
+            <para>The $mylimit value is an XProc option on the <code>p:declare-step</code>, the
+                    <code>p:count</code> has a defined option, whose value is set using
+                    <code>p:with-options</code>. </para>
+            <para>None of this explains the select attribute xpath expression on p:identity's
+                p:input element. Its purpose is to instruct the processor to filter incoming
+                documents on the input source port with an xpath expression, which is very useful to
+                select what you want to work on. Each matched &lt;p/> element is turned into a
+                document and will be copied to the p:identity output result port. XProc relies
+                heavily on XPath as its built in selection mechanism and we will see it pops up
+                everywhere.</para>
+            <para>With the magic of default readable ports, we can now understand how each step's
+                p:input uses a p:pipe element to define where documents flow from, even if we don't
+                explicitly instruct them in our pipeline. The p:pipe uses a step's name attribute
+                and port to unambiguously identify the binding and provides a rigid 'flow' path at
+                runtime, through which documents flow.</para>
+            <para>In summary, this pipeline takes a set of documents (from primary p:input) and
+                sends the input into p:identity (as defined with its p:input). The p:identity step
+                copies the p elements from them and passes them (as a sequence of documents) to the
+                p:count step. The p:count step counts the number of items in the sequence up to a
+                maximum of 10, outputting the count result to console (which is the job for primary
+                p:output result port).</para>
+            <para>I've chosen this example to illustrate that XProc has some disconcerting 'warts',
+                eg. the &lt;p:empty/> within the <code>p:with-option</code> is anachronistic at
+                best.  You should now have a sense of Process’s defaulting 'story'. Our description
+                of a pipeline needs a sufficient level of detail for an XProc processor to be able
+                to puzzle out <emphasis role="italic">how</emphasis> to process the documents. XProc
+                provides implicit defaults with its syntax to help make an already verbose language,
+                well less verbose. There is work needed at the W3C XML Processing WG level to help
+                make even more syntatical changes to reduce verbosity. </para>
+            <para>
+                <note>
+                    <para>For those who are curious, I would highly recommend installing what I
+                        consider the reference XProc implementation, Norm Walsh's <link
+                            linkend="xml-calabash">XML Calabash</link> and run against the example </para>
+                    <para><code>calabash -isource=test.xml -isource=test2.xml test.xpl</code></para>
+                    <para>This would yield the following result, outputted to console. </para>
+                    <para><code>&lt;c:result
+                            xmlns:c="http://www.w3.org/ns/xproc-step">2&lt;/c:result></code>
+                    </para>
+                    <para>Where the value of the c:result element reflects depending on how many
+                        &lt;p/> elements were passed from the p:identity step, up to a limit of 10. </para>
+                </note>
+            </para>
+            <sect3>
+                <title>Process Model</title>
+                <para>In classic work flow systems it is common to implement methods like <link
+                        linkend="fsm">Finite State Machine (FSM)</link> which embed state
+                    information within each document. </para>
+                <para>In such systems, changes to state are the events which control processing and
+                    the apparent 'flow' of documents. Document flow based on state transitions
+                    implies that there are no fixed paths between the processing 'steps' enabling at
+                    runtime highly dynamic and complex work flows. In practice, event driven
+                    pipelines are also difficult to implement and diagnosing issues with performance
+                    or optimisations not very straightforward.</para>
+                <para>A saying attributed to several programming luminaries declares that 'state' is
+                    the enemy of dynamic computation and I think this applies to XProc. A more
+                    amenable approach was needed to take advantage of functional programming
+                    principles associated with its declarative format.</para>
+                <para>In XProc, inputs flow into a pipeline from one step to the next with results
+                    emitted at the end. The order of the steps is constrained by the input/output
+                    connections between them rather then state contained within the documents
+                    themselves. Document flow is a consequence of the implicit and explicit binding
+                    of input source ports to output result ports.</para>
+                <para>This allows implementations to be able to statically analyze how to execute
+                    steps, be it in sequential or parallel fashion or to take advantage of some
+                    characteristic of the environment. With a minor loss of freedom in specifying
+                    highly complex work flows (though its still possible with XProc) we gain a lot
+                    of freedom in terms of process execution. </para>
+                <para>XProc also not have too bother maintaining the state of each document which
+                    itself can be complicated and costly in terms of performance. By eschewing with
+                    document state altogether, XProc avoids the issues associated with recovering
+                    state when it gets lost or corrupted. </para>
+                <para>Using a 'stateless' process flow model means that XProc itself minimises
+                    constraining parallel or streaming processing scenarios. Streaming is a
+                    particularly difficult scenario to enable, for example, if there is significant
+                    reordering between the input document trees and output document trees, its been
+                        <link linkend="zergaoui2009">observed</link> that one should avoid even
+                    attempting to stream, conversely even mature XML processor like <link
+                        linkend="saxon">SAXON</link> has only partial streaming in place for its XML
+                    Schema validator, xpath processor and XQuery/XSLT processor.   </para>
+                <para>Lastly, be aware that there are plenty of pipelines one could author that can
+                    cause side effects which invalidate streaming or parallel processing. This
+                    caveat is more to do with the technologies underlying any specific step
+                    processing (p:eval, p:xslt, etc) versus XProc. </para>
+            </sect3>
+            <sect3>
+                <title>Steps</title>
+                <para>Steps can have options and parameters, some steps are called 'compound' steps
+                    and embody multiple nested pipelines. </para>
+                <para>New steps can be defined, using p:declare-step, that are used in exactly the
+                    same manner as the built-in steps. Note that whenever you have create a
+                    pipeline, that pipeline itself can also be reused as a step in other
+                    pipelines.</para>
+                <para>Custom steps can be bundled up into library (p:library) and reused in other
+                    pipelines by importing using a p:import element. </para>
+                <sect4>
+                    <title>Compound and Multi container Steps</title>
+                    <para>A compound step contains a subpipeline. Multi-container steps contain two
+                        or more subpipeline(s).</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>p:declare-step - Declares an XProc pipeline. This step can define
+                                a new reusable XProc step for use by other pipelines. When used
+                                within another pipeline it acts as if it was an atomic step,
+                                regardless if it contains more subpipelines.</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:pipeline- Is an alias of p:declare-step with default implied
+                                inputs and outputs, itself reusable as a step in other pipelines.
+                                When invoked within another pipeline it acts as if it was an atomic
+                                step, regardless if it contains more subpipelines.</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:choose - Mulit container step which selects one of a number of
+                                alternative pipelines based on test criteria</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:for-each - Iterates over a sequence of documents with a specific
+                                subpipeline</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:group - Groups a sequence of steps together as a
+                                subpipeline</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:try - Multi container step that provides a try subpipeline which
+                                if fails is caught with an error exception handling
+                                subpipeline</para>
+                        </listitem>
+                        <listitem>
+                            <para>p:viewport - Iterates a pipeline over inner selections of each
+                                document in a set of documents.</para>
+                        </listitem>
+                    </itemizedlist>
+                </sect4>
+                <sect4>
+                    <title>Atomic Steps</title>
+                    <para>These steps are the basic building blocks of XProc pipelines with each
+                        carrying out a single XML operation. Atomic steps fully encapsulate the
+                        processing they apply. Most atomic steps accept input and emit output. All
+                        atomic steps will never themselves contain subpipeline(s).</para>
+                    <para><emphasis role="bold">Required steps</emphasis>: These steps are provided
+                        by a conformant XProc processor.<itemizedlist>
+                            <listitem>
+                                <para>&lt;p:add-attribute>: Add a single attribute to a set of
+                                    matching elements. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:add-xml-base>: Explicitly add or correct XML:base
+                                    attributes on elements. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:compare>: Compare two documents for equivalence. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:count>: Count the number of documents in source input
+                                    sequence. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:delete>: Delete items matched by pattern from the source
+                                    input. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:directory-list>: Enumerate a directory's listing into
+                                    result output. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:error>: Generate an error that throws at runtime.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:escape-markup>: Escape XML markup from source input.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:filter>: Filter documents with dynamically created
+                                    select expressions</para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:http-request>: Interact with resources identified by
+                                    Internationalized Resource Identifiers (IRIs) over HTTP. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:identity>: Make an exact copy of an input source to the
+                                    result output. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:insert>: Insert an XML selection into the source input.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:label-elements>: Create a label (ex. @XML:id) for each
+                                    matched element, and store the value of the label within an
+                                    attribute. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:load>: Load an XML resource from an IRI providing it as
+                                    result output. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:make-absolute-uris>: Make the value of an element or
+                                    attribute in the source input an absolute IRI value in the
+                                    result output . </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:namespace-rename>: Rename the namespace declarations.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:pack>: Merge two document sequences. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:parameters>: Make available a set of parameters as a
+                                    c:param-set XML document in the result output. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:rename>: Rename elements, attributes, or processing
+                                    instruction. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:replace>: Replace matching elements. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:set-attributes>: Set attributes on matching elements.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:sink>: Accept source input and generate no result
+                                    output. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:split-sequence>: Divide a single sequence into two.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:store>: Store a serialized version of its source input
+                                    to a URI. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:string-replace>:Perform string replacement on the source
+                                    input. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:unescape-markup>: Unescape the source input. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:unwrap>: Replace matched elements with their children.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:wrap>: Wrap matching nodes in the source document with a
+                                    new parent element. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:wrap-sequence>: Produce a new sequence of documents.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:xinclude>: Apply XInclude processing to the input
+                                    source. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:xslt>: XSLT evaluation on style sheet input source.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                        <emphasis role="bold">Optional Steps</emphasis>: These steps are optionally
+                        provided by an XProc processor.<itemizedlist>
+                            <listitem>
+                                <para>&lt;p:exec>: Apply an external command to the input source.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:hash>: Generate a cryptographic hash (message digest,
+                                    digital fingerprint) and inserts in document. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:uuid>: Generate a Universally Unique Identifier (UUID).
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:validate-with-relax-ng>: Validate the input XML with
+                                    RelaxNG schema. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:validate-with-schematron>: Validate the input XML with
+                                    Schematron schema. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:validate-with-xml-schema>: Validate the input XML with
+                                    XML schema. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:www-form-urldecode>: Decode the x-www-form-urlencoded
+                                    string into a set of XProc parameters. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:www-form-urlencode>: Encode a set of XProc parameter
+                                    values as an x-www-form-urlencoded string. </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:xquery>: XQuery evaluation on xquery input source.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:xsl-formatter>: Render an XSL version 1.1 document (as
+                                    in XSL-FO). </para>
+                            </listitem>
+                        </itemizedlist>
+                        <emphasis role="bold">Additional steps</emphasis>: The XML Processing WG
+                        from time to time publishes W3C notes on additional steps that exist in the
+                        XProc step namespace.<itemizedlist>
+                            <listitem>
+                                <para>&lt;p:template>: </para>
+                            </listitem>
+                            <listitem>
+                                <para>&lt;p:in-scope-names>:</para>
+                            </listitem>
+                        </itemizedlist>A developer may also define their own steps (using
+                        p:declare-step) which when combined with p:library provides a powerful reuse
+                        componitisation. <note>
+                            <title>Community defined extensions</title>
+                            <para>There are also many extensions being defined by the community
+                                which are being defined which some XProc processors may
+                                support.</para>
+                        </note></para>
+                </sect4>
+            </sect3>
+            <sect3>
+                <title>Known Implementations</title>
+                <para>The following is transcribed from a list of XProc processors being tested at
+                        <link linkend="known-impl">tests.xproc.org</link>:</para>
+                <para>
+                    <variablelist>
+                        <varlistentry>
+                            <term><link xlink:href="http://xmlcalabash.com/">Calabash</link></term>
+                            <listitem>
+                                <para><link xlink:href="http://nwalsh.com/">Norman Walsh</link> is
+                                    building an open-source implementation in Java. Calabash is
+                                    built on top of the <link xlink:href="http://saxonica.com/"
+                                        >Saxon APIs</link> and uses XPath 2.0 as its expression
+                                    language.</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><link xlink:href="http://developer.emc.com/xmltech"
+                                >Calumet</link></term>
+                            <listitem>
+                                <para><link xlink:href="http://www.emc.com/">EMC</link>’s Java-based
+                                    XProc processor. The processor features an extensible
+                                    architecture and is easy to embed in other Java applications.
+                                    Free for developer use.</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><link xlink:href="http://code.google.com/p/quixproc">QuiXProc
+                                    Open</link></term>
+                            <listitem>
+                                <para><link xlink:href="http://www.innovimax.fr">Innovimax</link>'s
+                                    GPL, Java implementation based on XML Calabash adding Streaming
+                                    and Parallel Processing. The is also a Commercial product at
+                                        <link xlink:href="http://quixproc.com"
+                                        >http://quixproc.com</link>.</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><link xlink:href="http://code.google.com/p/tubular/"
+                                    >Tubular</link></term>
+                            <listitem>
+                                <para>Tubular is a Java implementation based on immutable objects,
+                                    in order to facilitate the addition of parallelism support, thus
+                                    reducing the need for locking mechanisms.</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term>XProcerity</term>
+                            <listitem>
+                                <para>XProcerity is a Java implementation focused primarily on high
+                                    performance in multi-threaded environments, such as high-traffic
+                                    enterprise web applications.</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><link xlink:href="http://code.google.com/p/xprocxq/"
+                                    >xprocxq</link></term>
+                            <listitem>
+                                <para>An earlier implementation of Jim Fuller's <emphasis
+                                        role="bold">xprocxq</emphasis> is an experimental bootstrap
+                                    implementation of W3C XProc Draft Specification, written in
+                                    XQuery, for the eXist XML Database.</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
+                </para>
+            </sect3>
+            <sect3>
+                <title>XProc vnext</title>
+                <para>The following is a sampling of non trivial deployments of XProc in use today,
+                    Anecdotal evidence seems to point towards the fact that for the right scenario,
+                    XProc can be quite a power tool.</para>
+                <para><emphasis role="bold">http://mesonet.info/</emphasis> - real-time citizen
+                    world wide weather station</para>
+                <para><emphasis role="bold"
+                        >http://code.google.com/p/daisy-pipeline/wiki/XProcOverview</emphasis>- The
+                    DAISY Pipeline is an open-source, cross-platform framework for document-related
+                    pipelined transformation. It supports the migration of digital content to
+                    various formats efficiently and economically, facilitating both production and
+                    distribution of DAISY Digital Talking Books</para>
+                <para><emphasis role="bold"
+                        >http://balisage.net/Proceedings/vol8/html/Williams01/BalisageVol8-Williams01.html
+                    </emphasis>- validating RESTful services</para>
+                <para><emphasis role="bold">https://github.com/gimsieke/epubcheck-xproc </emphasis>-
+                    epub checker implemented using XProc </para>
+                <para>Unfortunately, there is just as strong feedback that indicates that there are
+                    many 'rough edges' in XProc v1.0 which is a barrier to wider adoption in both
+                    the XML and broader development communities.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>too verbose or the need to be overly explicit</para>
+                    </listitem>
+                    <listitem>
+                        <para>some constructs unwieldy (parameters)</para>
+                    </listitem>
+                    <listitem>
+                        <para>deficient (only use string values in options and variables)</para>
+                    </listitem>
+                    <listitem>
+                        <para>hard to work with other non-XML data</para>
+                    </listitem>
+                    <listitem>
+                        <para>we require mechanism for sanctioning step definitions without full
+                            blown W3C specification</para>
+                    </listitem>
+                </itemizedlist>
+                <para>Adoption, while slow, has had a steady uptake over the ensuing two and half
+                    years since becoming a W3C Recommendation. The W3C XML Processing WG is now
+                    preparing for work on version 2.0 of the specification, by first creating a
+                        <link linkend="xprov-vnext-requirements">draft set of requirements</link>
+                    with a short set of goals that attempt to address deficiencies;</para>
+                <para><orderedlist>
+                        <listitem>
+                            <para>Improving ease of use (syntactic improvements) </para>
+                        </listitem>
+                        <listitem>
+                            <para>Improving ease of use (ex. increasing the scope for working with
+                                non XML content) </para>
+                        </listitem>
+                        <listitem>
+                            <para>Addressing known shortcomings in the language</para>
+                        </listitem>
+                        <listitem>
+                            <para>Improve relationship with streaming and parallel processing
+                            </para>
+                        </listitem>
+                    </orderedlist>The requirements document also traces how well XProc v1.0
+                    satisfied previous use case requirements. This 'score card' helps focus working
+                    on scenarios that were not at all or partially addressed.</para>
+                <para>The next version of XProc is very much a case of 'fix what is broken' and be
+                    judicious with adding only the bare minimum required. </para>
+                <para>The following list is a sample of concrete actions being considered; </para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis role="bold">Fix Parameters</emphasis> - Change parameters to
+                            be more like options which imply adopting the XSLT 3.0 extensions to the
+                            data model and functions and operators to support maps </para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="bold">Non XML document processing</emphasis> - Provide
+                            native processing of non XML processing with a constrained scope
+                            (possibly using a resource manager) </para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="bold">Drop XPath 1.0 support</emphasis> - Remove any
+                            *must* type requirements for supporting XPath 1.0. </para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="bold">Allow options and variable to contain arbitrary
+                                fragments</emphasis> - Relax the constraint that variables and
+                            options can ony be defined as a string or xs:untypedAtomic. </para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="bold">Fix "non-step wrapper"</emphasis>- Remove the
+                            concept of 'Non-step wrappers' by making p:when/p:otherwise in p:choose
+                            and p:group/p:catch in p:try compound steps and get rid of the notion
+                            "non-step wrapper". </para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis role="bold">Syntax changes</emphasis> - For example, allow
+                            Attribute Value Template (AVT).</para>
+                    </listitem>
+                </itemizedlist>
+                <para>This is an ongoing discussion, so please feel free to offer suggestions and
+                    join the debate (Details at <link linkend="xmlprocwg">XML Processing WG home
+                        page</link>) </para>
+            </sect3>
+        </sect2>
+    </sect1>
+    <sect1>
+        <title>The xproc.xq project</title>
+        <para><emphasis role="italic">The xproc.xq project is an open source project hosted at <link
+                    linkend="xproc.xq">github</link> and offers use under the liberal <link
+                    linkend="apache-lic-v2">Apache v2.0 license</link>. xproc.xq is an
+                implementation of an XProc processor using XQuery v3.0 with vendor specific plugins.
+                Currently, only support for MarkLogic exists but plans are in place to support other
+                XQuery processors that support XQuery 3.0 (eXist, Saxon, XQilla). </emphasis></para>
+        <para>In late 2008, the author created a prototype XProc processor using <link
+                linkend="xslt-2">XSLT v2.0</link> under eXist XML Database. This proof of concept
+            led to the start of development of <emphasis role="bold">xprocxq</emphasis>, with an
+            initial implementation created as an extension to the eXist XML database server. </para>
+        <para>The goals were set out as follows;</para>
+        <itemizedlist>
+            <listitem>
+                <para>creation of an XProc processor with XQuery </para>
+            </listitem>
+            <listitem>
+                <para>avoid using XSLT, mainly as the author had engaged in development of pipeline
+                    like processing in XSLT and wanted to avoid reliance upon it</para>
+            </listitem>
+            <listitem>
+                <para>use eXist support for first class functions to underpin execution
+                    control</para>
+            </listitem>
+            <listitem>
+                <para>acknowledge limitations of XQuery by implementing a usable subset of XProc (at
+                    the time both XQuery 3.0 and XProc v1.0 were draft standards)</para>
+            </listitem>
+            <listitem>
+                <para>leverage performance of an XProc processor embedded in a database
+                    context</para>
+            </listitem>
+        </itemizedlist>
+        <para>eXist has excellent extensibility characteristics making it is easy to develop
+            extensions, but it became quite a challenge to get a usable subset of XProc conformance.
+            Most of the issues were related to XQuery v1.0 suitability as a language for
+            implementing such a processor versus anything particularly difficult with eXist itself. </para>
+        <para>XQuery v1.0 lack of first class function support meant a heavy reliance on eXist
+            specific functions, more troubling was that many fundamentals of xprocxq process flow
+            were controlled by util:eval() (eXist extension for dynamically executing constructed
+            XQuery). Additionally, due to a reluctance to employ XSLT there were several issues in
+            the implementation of XProc steps, which turns out to be a mistake as XProc makes heavy
+            use of <link linkend="xslt-2">XSLT style match</link> expressions. </para>
+        <para>
+            <tip>
+                <para>Incidently, it is now possible to use XQuery 3.0 to fully emulate XSLT
+                    matching expressions as exemplified by <link linkend="transform-xq">John
+                        Snelson's transform.xq</link></para>
+            </tip>
+        </para>
+        <para>In 2010, when XProc became a recommendation, plans changed to completely refactor
+                <emphasis role="bold">xprocxq</emphasis> to work with <link linkend="saxon"
+                >SAXON</link>, which started to support many of the emerging ideas in XQuery 3.0.
+            This had a positive effect on the internal processing and with robust first class
+            function support was able to remove most evals but still a heavy reliance on vendor
+            specific extensions throughout the codebase. </para>
+        <para>The final iteration of the XProc processor, known as xproc.xq, started in 2012 and is
+            built on top of MarkLogic XQuery v3.0 support. This refactor focused on isolating as
+            much of the codebase as possible into pure XQuery v3.0 and push any vendor specific code
+            into a pluggable module. This enables future versions of xproc.xq to support other
+            XQuery vendors.</para>
+    </sect1>
+    <sect1>
+        <title>xproc.xq architecture</title>
+        <sect2>
+            <title>Design</title>
+            <para>The diagram provides a 'fly over' view of xproc.xq application architecture, in
+                the context of its process flow. Using XQuery allows us to focus on the application
+                architecture aspects, which is why there are no lower level components on display
+                (xml parser, xpath engine, xml schema valiator ...).</para>
+            <para>
+                <inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/xmllondon-draft.png"/>
+                    </imageobject>
+                </inlinemediaobject>
+            </para>
+            <para>The XProc processor advances through three stages when processing an XML
+                pipeline.</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis role="bold">static analysis</emphasis>- consume and parse the
+                        XProc pipeline, generating a runnable representation of said pipeline</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">dynamic evaluation</emphasis>- engine that
+                        dynamically evaluates the runnable pipeline representation</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">serialization</emphasis>- output interim results for
+                        further processing or final results</para>
+                </listitem>
+            </itemizedlist>
+            <para>Before we precede a word of caution. I am using nomenclature which is more
+                appropriately applied to development within compiled languages. Building an XProc
+                processor using a dynamic, interpreted language like XQuery often brings the
+                terminology in use into question, mainly because engineering tradeoffs are being
+                considered which in compiled languages would feel like 'cutting corners'. This comes
+                with the territory of pushing XQuery beyond its intended limits and with that said
+                we now drill down into more detail of each phase. </para>
+        </sect2>
+        <sect2>
+            <title>Static Analysis Phase</title>
+            <para>The static analysis phase consumes the original pipeline, parsing it and generates
+                a highly decorated version of this pipeline. </para>
+            <para>This decorated pipeline version can be considered the internal model used
+                throughout all subsequent processing and provides a 'single point of truth' in terms
+                of lookup, namespace declarations, step bindings, variable &amp; option definitions.
+                The static phaze also takes care of adding a unique internal default name to each
+                step, as well as reordering steps according to the flow as defined by connections
+                (bindings) between steps.</para>
+            <para xml:id="p3">When a pipeline is created, the syntax represents an authors intent
+                but itself does not contain enough information to be 'runnable' by an XProc
+                processor. As we've seen in <link linkend="explicit-pipeline">previous
+                    sections</link>, XProc has a suite of implied processing behaviors which need to
+                be 'teased' out, we also need to take care of other concerns, like ensuring the
+                order of steps follow how their implicit and explicit bindings have been created. To
+                illustrate what I mean, nothing stops a developer writing an <emphasis role="italic"
+                    >obfuscated</emphasis> pipeline where the order of step processing is unclear. </para>
+            <para>The following is an example (taken directly from the <link
+                    linkend="XPROC-TEST-SUITE">W3C XProc test suite</link>) which illustrates the
+                kind of problems that the static analysis phase needs to account for.</para>
+            <example>
+                <title>unordered XProc Example</title>
+                <programlisting>&lt;p:declare-step version='1.0' name="main">
+  &lt;p:input port="source"/>
+  &lt;p:output port="result">
+    &lt;p:pipe step="i1" port="result"/>
+  &lt;/p:output>
+  
+  &lt;p:identity name="i1">
+    &lt;p:input port="source">
+      &lt;p:pipe step="i3" port="result"/>
+    &lt;/p:input>
+  &lt;/p:identity>
+  
+  &lt;p:identity>
+    &lt;p:input port="source">
+      &lt;p:pipe step="main" port="source"/>
+    &lt;/p:input>
+  &lt;/p:identity>
+
+  &lt;p:identity name="i3"/>
+
+&lt;/p:declare-step>               </programlisting>
+            </example>
+            <para>In this example, the <code>p:identity</code> step named 'i1' input port means its
+                not the first step in the XProc work flow. Its actually the second step defined
+                which takes in the pipeline's input that is the first to be processed. And perhaps
+                what will surprise most readers is that the first step is actually the last to
+                process, based on its step binding with <code>p:identity</code> 'i3'. Deriving the
+                final process order is a function of making all step binding relationships
+                explicit.</para>
+            <para>The next example shows a pipeline where the author took care to layout the steps
+                in their true process order. </para>
+            <example>
+                <title>ordered XProc Example</title>
+                <programlisting>&lt;p:declare-step version='1.0' name="main">
+  &lt;p:input port="source"/>
+  &lt;p:output port="result">
+    &lt;p:pipe step="i1" port="result"/>
+  &lt;/p:output>
+
+&lt;p:identity>
+    &lt;p:input port="source">
+      &lt;p:pipe step="main" port="source"/>
+    &lt;/p:input>
+&lt;/p:identity>
+
+&lt;p:identity name="i3"/>  
+
+&lt;p:identity name="i1">
+  &lt;p:input port="source">
+    &lt;p:pipe step="i3" port="result"/>
+  &lt;/p:input>
+&lt;/p:identity>
+
+&lt;/p:declare-step>               </programlisting>
+            </example>
+            <para>Its a feature of XProc that the author does not have to explicitly control process
+                order by ordering XML elements. Being able to insert a step or make changes to step
+                bindings without having to go trace through an entire pipeline checking ordering
+                makes life easier for developers. </para>
+            <para>
+                <tip>
+                    <title>Side Effects in pipelines</title>
+                    <para>Connections between steps define order in XProc but this is not a promise
+                        or guarantee of the actual process order. For pipelines that rely upon side
+                        effects, unexpected results may occur (non-deterministic processing, like
+                        downloading a file from the internet or saving a file to the file system).
+                        The XProc specification discusses this in <link linkend="XPROC-PARALLELISM"
+                            >Appendix H.</link></para>
+                </tip>
+            </para>
+            <para>Now lets take a look at the abstract syntax tree that gets generated by the static
+                analysis phase, using a variation of our original xproc example.</para>
+            <example>
+                <title>XProc example</title>
+                <programlisting>&lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" 
+            version="1.0">
+&lt;p:identity>    
+    &lt;p:input port="source"/> 
+&lt;/p:identity>       
+&lt;p:count limit="10"/>
+&lt;/p:pipeline></programlisting>
+            </example>
+            <para>If you have not previously installed xproc.xq to run on your MarkLogic instance,
+                now is the time to review <link linkend="xproc.xq-install">xproc.xq
+                    installation</link> to install and deploy xproc.xq.</para>
+            <para>The default method of running xproc.xq is to import the xprocxq XQuery library
+                module and invoke with the simple <code>xprocxq:xq()</code> entry point, as shown in
+                the following code listing. </para>
+            <example>
+                <title>xproc.xq entry point</title>
+                <programlisting>xquery version "3.0";
+
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+declare namespace p="http://www.w3.org/ns/xproc";
+                     
+let $pipeline :=
+    &lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" 
+                version="1.0">
+    &lt;p:identity/>      
+    &lt;p:count limit="10"/>
+    &lt;/p:pipeline>
+
+let $stdin := (&lt;doc>&lt;p>mary had a little lamb&lt;/p>&lt;/doc>,&lt;doc>&lt;p>a&lt;/p>&lt;p>b&lt;/p>&lt;/doc>)
+return
+  xprocxq:xq($pipeline,$stdin)                    </programlisting>
+            </example>
+            <para>The simplest way to run this is to cut and paste into MarkLogic query console
+                (http://localhost:8000/qconsole) and choose the content source that xproc.xq has
+                been set up with.</para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/qconsole.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>Running this will return a c:result element containing the count of unique
+                documents</para>
+            <example>
+                <title>result of XProc processing</title>
+                <programlisting>&lt;c:result xmlns:c="http://www.w3.org/ns/xproc-step">2&lt;/c:result>                     </programlisting>
+            </example>
+            <para>But what we really want is to be able to analyze the decorated tree version that
+                is generated 'under the covers' during the static analysis phase. This can be
+                achieved using an overloaded version of the <code>xprocxq:xq()</code> function,
+                demonstrated below;</para>
+            <example>
+                <title>getting debug output from xproc.xq</title>
+                <programlisting>xquery version "3.0";
+
+import module namespace xprocxq = "http://xproc.net/xprocxq" at "/xquery/xproc.xq";
+declare namespace p="http://www.w3.org/ns/xproc";
+                     
+  let $pipeline :=
+    &lt;p:pipeline xmlns:p="http://www.w3.org/ns/xproc" 
+                version="1.0">
+    &lt;p:identity>    
+        &lt;p:input port="source"/> 
+    &lt;/p:identity>       
+    &lt;p:count limit="10"/>
+    &lt;/p:pipeline>
+
+  let $stdin    := (&lt;doc>&lt;p>mary had a little lamb&lt;/p>&lt;/doc>,&lt;doc>&lt;p>a&lt;/p>&lt;p>b&lt;/p>&lt;/doc>)
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $dflag    := 1
+  let $tflag    := 0
+  return
+     xprocxq:xq($pipeline,$stdin,$bindings,$options,$outputs,$dflag,$tflag)                    </programlisting>
+            </example>
+            <para>The parameters the function accepts are defined as;</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis role="bold">$pipeline</emphasis> - the XProc pipeline being
+                        processed</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$stdin</emphasis>- A sequence of XML Document(s) to
+                        be placed on the primary input source port of the pipeline</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$bindings</emphasis>- n/a</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$options</emphasis>- Sequence containing options
+                        that will override pipeline option values</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$outputs</emphasis>- n/a</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$dflag</emphasis>- When set to 1 outputs decorated
+                        tree representation of XProc pipeline and ll input/output port values
+                    </para>
+                </listitem>
+                <listitem>
+                    <para><emphasis role="bold">$tflag</emphasis>- When set to 1 outputs timing
+                        information </para>
+                </listitem>
+            </itemizedlist>
+            <para>By supplying a value of 1 for the $dflag, we are instructingxproc.xq to emit the
+                decorated pipeline tree. We also get returned all values of any input or output port
+                which for the time being we will ignore.</para>
+            <para>Cut and paste the above into query console (http://localhost:8000/qconsole) and
+                run.</para>
+            <example>
+                <title>debug output</title>
+                <programlisting>&lt;xproc:debug episode="11600574566574829649" xmlns:xproc="http://xproc.net/xproc">
+    &lt;xproc:pipeline>
+        &lt;p:declare-step version="1.0" mylimit="10" xproc:type="comp-step" <emphasis role="bold">xproc:default-name="!1"</emphasis> xmlns:p="http://www.w3.org/ns/xproc">
+            &lt;ext:pre <emphasis role="bold">xproc:default-name="!1.0"</emphasis> xproc:step="true" xproc:func="ext:pre#4" xmlns:ext="http://xproc.net/xproc/ext">
+                &lt;p:input port="source" select="/" xproc:type="comp" primary="true">
+                    &lt;p:pipe port="result" xproc:type="comp" step="!1" xproc:step-name="!1"/>
+                &lt;/p:input>
+                &lt;p:output xproc:type="comp" port="result" primary="true" select="/"/>
+            &lt;/ext:pre>
+            &lt;p:identity xproc:step="true" xproc:type="std-step" xproc:func="std:identity#4" <emphasis role="bold">xproc:default-name="!1.1"</emphasis>>
+                &lt;p:input port="source" select="//p" xproc:type="comp" primary="true">
+                    &lt;p:pipe port="result" xproc:type="comp" step="!1.0" xproc:step-name="!1.0"/>
+                &lt;/p:input>
+                &lt;p:output xproc:type="comp" port="result" sequence="true" primary="true" select="/"/>
+            &lt;/p:identity>
+            &lt;p:count limit="10" xproc:step="true" xproc:type="std-step" xproc:func="std:count#4" <emphasis role="bold">xproc:default-name="!1.2"</emphasis>>
+                &lt;p:input port="source" select="/" xproc:type="comp" primary="true">
+                    &lt;p:pipe port="result" xproc:type="comp" step="!1.1" xproc:step-name="!1.1"/>
+                &lt;/p:input>
+                &lt;p:output xproc:type="comp" port="result" primary="true" select="/"/>
+                &lt;p:with-option xproc:type="comp" name="limit" select="10"/>
+            &lt;/p:count>
+            &lt;ext:post xproc:step="true" xproc:func="ext:post#4" <emphasis role="bold">xproc:default-name="!1!"</emphasis> xmlns:ext="http://xproc.net/xproc/ext">
+                &lt;p:input port="source" primary="true" select="/" xproc:type="comp">
+                    &lt;p:pipe port="result" xproc:type="comp" step="!1.2" xproc:step-name="!1.2"/>
+                &lt;/p:input>
+                &lt;p:output primary="true" port="result" xproc:type="comp" select="/"/>
+            &lt;/ext:post>
+        &lt;/p:declare-step>
+    &lt;/xproc:pipeline>
+    &lt;xproc:outputs>
+       ..... snipped for brevity .....
+    &lt;/xproc:outputs>
+&lt;/xproc:debug></programlisting>
+            </example>
+            <para>We are specifically interested in the <code>xproc:pipeline</code> element which
+                contains the abstract syntax tree (decorated pipeline). </para>
+            <para>The code highlighted in bold shows how each step now has a unique internal
+                    <code>@xproc:default-name</code> attribute. The naming convention for these
+                default names is outlined within the <link linkend="xproc-spec">XProc
+                    specification</link> itself and provides a unique id to each step element.
+                Nesting as well as a way to determine its nesting level, which is needed to deal
+                with nested subpipelines. The input and output port <code>p:pipe</code> elements now
+                point to their sources using these default-names. </para>
+            <para>The following table outlines how<code>@xproc:default-name</code> are used;</para>
+            <para>
+                <table frame="all">
+                    <title/>
+                    <tgroup cols="2">
+                        <colspec colname="c1" colnum="1" colwidth="1*"/>
+                        <colspec colname="c2" colnum="2" colwidth="8.52*"/>
+                        <thead>
+                            <row>
+                                <entry>Level #</entry>
+                                <entry>Level #.#</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>!1 p:declare-step</entry>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry> !1.0 ext:pre step - internal step that is responsible for
+                                    bringing input into the pipeline via p:pipe on p:input reference
+                                    to !!</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>
+                                    <para> !1.1 p:identity step - standard atomic step that takes
+                                        its input from the result of !1.0</para>
+                                </entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>
+                                    <para> !1.2 p:count step - standard atomic step that takes its
+                                        input from the result port of !1.1</para>
+                                </entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>
+                                    <para> !1! ext:post step - internal step that takes its input
+                                        from the result port of !1.2 and responsible for placing the
+                                        result to the outputter.</para>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+            </para>
+            <para>The ext:pre and ext:post steps are not extension steps to be specified by pipeline
+                authors but added during static analysis to facilitate piping source and result
+                ports to the parent of the pipeline. All these steps do is copy their inputs to
+                their outputs (similar to p:identity in that respect) to facilitate bringing in data
+                from outside the pipeline itself.</para>
+            <para>For our single branch pipeline example, this means that the !1 p:declare-step
+                    <code>p:input</code> is passing the standard input (set during xprocxq:xq()
+                invoke) to ext:pre <code>p:input</code>. In the same manner, the !1! ext:post
+                    <code>p:output</code> is being piped to !1 p:declare-step <code>p:output</code>
+                ending upon being emitted as the return result from the xprocxq:xq() function
+                invoke.</para>
+            <para>These extension steps are also responsible for making sure XML documents flow
+                correctly between steps and subpipelines.</para>
+            <para>Moving on from extension steps, lets now remark upon the <code>xproc:type</code>
+                attribute which exist on every element. This attribute identifies an element's
+                component type, within the XProc vocabulary; explicitly marking out elements makes
+                dynamic evaluation simpler. The following list outlines all the available types;<itemizedlist>
+                    <listitem>
+                        <para>comp-step: indicates a compound step</para>
+                    </listitem>
+                    <listitem>
+                        <para>*-step: indicates a (standard | optional | extension) atomic
+                            step</para>
+                    </listitem>
+                    <listitem>
+                        <para>comp: indicates an ancillary component (all other elements that are
+                            not steps themselves e.g.. p:input, p:output, p:pipe, p:option,
+                            etc...)</para>
+                    </listitem>
+                </itemizedlist>Finally, the <code>@xproc:step</code> and <code>@xproc:func</code>
+                attributes are used to map the step element with the internal function that does the
+                processing for the step, which we explain in more detail in the next section.</para>
+            <para/>
+        </sect2>
+        <sect2>
+            <title>Dynamic Evaluation Phase</title>
+            <para>Once a decorated pipeline has been built, its the job of the evaluation stage to
+                execute the pipeline and manage the inputs and outputs sloughing off each step of
+                the process. </para>
+            <para>From the view of the evaluator, every type of pipeline is constructed to be an
+                ordered sequence of steps. The diagram shows this for our example pipeline. </para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/pipeline-decomposition1.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>But what about pipelines that contain compound or multi container steps? One of
+                the strengths of XProc is its ability to construct complex multi branching work
+                flows, but how can we model these branching work flows in a form thats easy for the
+                evaluator to process? </para>
+            <para>The next diagram shows a complex pipelines, containing a p:choose that switches to
+                one subpipeline or the other, based on some condition. At the top level, we view
+                each step atomically, that is we have only two steps <code>p:choose</code> and
+                    <code>p:store</code>.</para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/pipeline-decomposition2.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>During runtime, <code>p:choose</code> invokes a new instance of the evaluator of
+                the chosen subpipeline. The subpipelines are modeled as separate ordered sequences,
+                with only one of them ever actually selected to process during runtime.</para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/pipeline-decomposition3.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>We do not spawn or clone instances of the evaluator, execution still occurs on a
+                single code path . The next diagram shows how nested functional composition provides
+                the mechanism for achieving this.</para>
+            <para/>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/evaluationphase.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>Reading the diagram from top to bottom and left to right illustrates programmatic
+                execution flow.</para>
+            <para>Once we get into dynamic evaluation, we see that the main engine is the novel
+                application of an XQuery 3.0 <code>left-fold()</code> function. The decorated
+                pipeline steps are represented by a an ordered sequence of steps identified by their
+                    <code>@xproc:default-name</code>. This solves the problem of how to reduce
+                complex process sequences into a single process sequence, with itself reducing to a
+                single final output ('turtles all the way down').</para>
+            <example>
+                <title>xproc.xq evaluation stage 'engine'</title>
+                <programlisting>left-fold( $xproc:eval-step-func, $starting-input,(!1, !1.0, !1.1, !1.2, !1!))</programlisting>
+            </example>
+            <para>If any of the steps in the process sequence represent another process sequence
+                (e.g. a subpipeline) our ReduceReduce algorithm naturally 'reduces' up the value as
+                if the original step was atomic.</para>
+            <para>The parameters of the <code>left-fold()</code> function are described
+                below;</para>
+            <itemizedlist>
+                <listitem>
+                    <para>$xproc:eval-step-func- step evaluator function defined and passed in at
+                        runtime. This function is responsible for running each steps
+                        function.</para>
+                </listitem>
+                <listitem>
+                    <para>$starting-input- every evaluation process sequence has a starting
+                        input</para>
+                </listitem>
+                <listitem>
+                    <para>sequence of <code>@xproc:default-name</code>-. Names are unique to a
+                        pipeline and while we could have passed in the step's functions themselves
+                        it seemed to make more sense to pass around the step's ID. </para>
+                </listitem>
+            </itemizedlist>
+            <para>You may recall that decorated pipelines defines an <code>@xproc:func</code>
+                attribute and that is looked up for execution by $xproc:eval-step-func function
+                (which itself is defined as xproc:evalstep#4 by default). Defining at runtime, a
+                function that runs each step function, proves to be a powerful and flexible idiom
+                that opens up a range of interesting possibilities for redefining and enhancing step
+                processing without amending xproc.xq codebase. (we have some <link linkend="byosr"
+                    >fun</link> doing just this later in the paper). </para>
+            <para>The other important responsibility of the dynamic evaluation stage is to ensure
+                that with each step processed that its inputs and outputs are placed within the
+                resource manager, making them available in a consistent and easy manner for other
+                steps to use. The resource manager is vendor specific and in the case of xproc.xq
+                running on MarkLogic, we take advantage of the database to store this data. With
+                other vendors we may have to push to disk or keep process results within in memory
+                data structures (such as map:map extensions in many of the XQuery processors). </para>
+            <para>Today, the resource manager just serves up and manages internal IRI's which are
+                constructed from the XProc <link linkend="xproc-system-properties">episode</link>
+                system property and <code>@xproc:default-name</code> but the plan is to use the
+                resource manager to override URI to provide <link linkend="xml-catalog">xml
+                    catalog</link> like functionality.</para>
+        </sect2>
+        <sect2>
+            <title>Serialisation</title>
+            <para>xproc.xq implements a naive serialisation strategy, as all it does today is looks
+                up from the resource manager the output result port for the step named !1!, which in
+                the XProc naming convention is always the top level (and last) result port.</para>
+            <para>The only other responsibility of the serialisation stage is to output debug
+                information (previously shown) which contains the decorated pipeline and a dump of
+                all port values.</para>
+            <para>As work progresses on xproc.xq, the serialisation layer will need to become more
+                sophisticated, especially in the area of performance as we want to be able to
+                persist documents to the underlying database efficiently.</para>
+        </sect2>
+        <sect2>
+            <title>Code Layout</title>
+            <para>XQuery being a relatively youthful language with lightweight reuse mechanisms,
+                means it is important to put some thought into how to design a project's code
+                layout. </para>
+            <para>In the case of xproc.xq it was important to provide an entry point 'documented'
+                module (xproc.xq) which is the XQuery Library module developers would import into
+                their own XQuery projects. Having a rigid interface encapsulates the implementation,
+                just a fancy way of saying we can make changes to xproc-impl.xqy without changing
+                the entrypoint that other modules may invoke.</para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/filelayout.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>Isolating all vendor specific code within the util.xqy and resource.xqy modules
+                assists in making it easier to provide support for other XQuery vendors going
+                forward into the future.</para>
+        </sect2>
+        <sect2>
+            <title>A word about testing in xproc.xq</title>
+            <para>Tests for xproc.xq are contained within the src/tests directory of the
+                distribution and provide coverage for individual steps, as well as end to end
+                testing from the <code>xprocxq:xq()</code> entrypoint.</para>
+            <para>Tests are identified using a $test:case annotation with most tests employing the
+                    <code>assert:equal()</code> function to test for equivalence between two inputs.
+                The following code listing shows how a typical test looks like;</para>
+            <example>
+                <title>test:dentity</title>
+                <programlisting>declare %test:case function test:testIdentity() { 
+  let $actual := std:identity(&lt;test/>,(),(),())
+  return
+    assert:equal($actual,document{&lt;test>&lt;/test>})
+};                </programlisting>
+            </example>
+            <para>The test suite runner used by xproc.xq is based on the Rob Whitby's excellent
+                    <link linkend="xray">XRay</link> which has both a web and command line
+                GUI.</para>
+            <para><inlinemediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/xraytests.png"/>
+                    </imageobject>
+                </inlinemediaobject></para>
+            <para>XRay also defines the annotations %test:setup and %test:teardown for setting up
+                the test environment.</para>
+            <para>Overall, XRay's set of features, robustness and speed make it the perfect choice
+                for XQuery testing in MarkLogic and can highly recommend its usage.</para>
+            <para>One gap in automation revolves around running the current W3C XProc test suite
+                which are not yet covered under the XRay system and uses a custom test runner built
+                in XQuery. Time permitting these tests will also find their way under XRay
+                automation.</para>
+            <para>Another known deficiency is mock testing within XProc. which could be addressed
+                with implementation of a <link linkend="resource-manager">Resource
+                Manager</link>.</para>
+        </sect2>
+    </sect1>
+    <sect1>
+        <title>Some Design Decisions</title>
+        <para>There have been many design decisions over the past few years of xproc.xq development,
+            but some have been more impactful then others.</para>
+        <sect2>
+            <title>XQuery 3.0 to the rescue</title>
+            <para>Introducing XQuery 3.0 into the xproc.xq project represented a significant and
+                positive turning point in its development. In previous incarnations, using XQuery
+                v1.0, xproc.xq had serious issues as there were subtle and hard to debug issues
+                arising due to the usage of eval functions, which were employed to achieve flexible
+                execution of pipelines and steps. </para>
+            <para>Problems with performance were appearing, especially where we had nested
+                evaluation. Each invoke of the eval function raised the overall computing resources
+                'cost' through the need to clone an entire execution environment. </para>
+            <para>As Michael Kay observed in his <link linkend="kay2009">2009 Balisage 'You Pull,
+                    I’ll Push: on the Polarity of Pipelines' paper</link>,  XQuery can be used to
+                create 'pull' pipelines which take advantage of using function calls as the primary
+                composition mechanism, in the case of xproc.xq we achieve this using fn:left-fold()
+                to encapsulate nested function calls. The cited work also demonstrates that pull
+                pipelines are not particularly good at broadcasting to multiple execution streams of
+                execution, but are good at merging multiple inputs. As all branching mechanisms in
+                XProc naturally resolve to only one execution path at any point in runtime, using a
+                'pull' style pipeline seems to represent a good match. </para>
+            <para>Here are just a few reasons why XQuery 3.0 is </para>
+            <itemizedlist>
+                <listitem>
+                    <para>Using a Reducer, such as <code>left-fold()</code>, in combination with
+                        dynamic function calls underpin the heart of xproc.xq dynamic evaluation
+                        engine. It means we have no problems with performance or any of the
+                        aforementioned issues with spawned environments for evaluation. </para>
+                </listitem>
+                <listitem>
+                    <para>XQuery 3.0 annotations feature is employed to identify in the codebase
+                        step functions. As we can query which functions have this annotation at
+                        runtime it vastly simplifies xproc.xq extensibility mechanism making it
+                        straightforward to author new steps in pure XQuery. </para>
+                </listitem>
+                <listitem>
+                    <para>The choice of the 'flow' work flow model is a perfect match for a
+                        functional programming language which has functions as first class citizens.
+                        All step inputs and outputs are written once and never mutated thereafter.
+                        Changing state 'in-place' is destructive and can represent a loss of
+                        fidelity, as xproc.xq has a complete trace of every steps input and outputs
+                        it is very easy to diagnose and test.</para>
+                </listitem>
+            </itemizedlist>
+        </sect2>
+        <sect2>
+            <title>Steps with XSLT &amp; XQuery</title>
+            <para>As explained in the xproc.xq history section, I had embarked on large pipelining
+                projects in early 2000's with XSLT and even had gone so far as to implement a
+                primitive version of xproc.xq using XSLT v2.0.</para>
+            <para>As I had originally targeted xproc.xq to run in the context of an XML database, it
+                seemed a reasonable choice to use XQuery as the implementation language (it being
+                the stored proc language for most XML databases). </para>
+            <para>The collory to this decision was to banish XSLT v2.0 which turned out to be the
+                wrong approach. My original concerns had revolved around using XSLT v2.0 within the
+                dynamic evaluation phase, but I in so deciding I also opted out of using XSLT v2.0
+                anywhere in xproc.xq development. XSLT's polymorphism and dynamic dispatch makes
+                static analysis hard enough if you are creating an XSLT processor and even more
+                difficult if the static analysis is being performed at a higher application level. </para>
+            <para>XProc dependency on XSLT match patterns combined with the fact that many of the
+                steps lent themselves to implementation using XSLT v2.0, I had inadvertently created
+                a more difficult development path. Another aggravating factor was the gap between
+                maturity of XSLT 2.0 and XQuery v1.0, which usually resulted in some hodge podge of
+                XQuery v1.0 with vendor extensions.</para>
+            <para>Finally, during the transition from using SAXON to Marklogic XQuery processor, I
+                changed my decision and decided to use XSLT v2.0 in the implementation of steps. </para>
+            <para>This was enormously useful as it had an immediate effect of simplifying many of
+                the buggy step functions and enabling the development of some functions which had
+                proved complicated to even start developing.</para>
+        </sect2>
+        <sect2>
+            <title xml:id="resource-manager">Nascent Resource Manager</title>
+            <para>xproc.xq implements a simple resource manager that provides durable storage of
+                every input and output that is generated throughout the dynamic evaluation phase.
+                Today, this resource manager is used for internal lookup of port values and is
+                useful when debugging pipelines. </para>
+            <para>As it exists today in the codebase, xproc.xq is well placed to expose resource
+                manager functionality directly to XProc developers, in the form of switches, options
+                or extension steps. An enhanced resource manager could provide;</para>
+            <itemizedlist>
+                <listitem>
+                    <para>pluggable storage api - could mean that storage backends could be easily
+                        swapped with no change to the XProc code. Absolute URI's could be overriden
+                        or new scheme's could be contemplated (ex. resource://).</para>
+                </listitem>
+                <listitem>
+                    <para>mock testing - being able to 'override' URI's that refer to real resources
+                        would make testing easier and provide greater coverage</para>
+                </listitem>
+            </itemizedlist>
+            <para>There has been much discussion on the W3C XML Processing Working Group about the
+                idea of formalising the concept of a resource manager within XProc. I am not
+                personally convinced that the resource manager needs to be a sanctioned feature of
+                XProc, so far its felt like an implementation detail, though this is one of those
+                features where experience in the field should be gathered before rushing to
+                specification.</para>
+        </sect2>
+    </sect1>
+    <sect1>
+        <title>Having some fun</title>
+        <para>Now that we've dived into the innards of xproc.xq and explained some of the more
+            significant design decisions, its time to corroborate the impact of these decisions by
+            directly experiencing xproc.xq. </para>
+        <sect2>
+            <title>Run step function in XQuery</title>
+            <para>Why let xproc.xq have all the fun ? We can run individual steps from XQuery, as
+                long as we know what to pass to the step function. </para>
+            <para>Each step function has the same functional signature;</para>
+            <itemizedlist>
+                <listitem>
+                    <para>primary input- input sequence of XML document(s)</para>
+                </listitem>
+                <listitem>
+                    <para>secondary input sequence of XML document(s)</para>
+                </listitem>
+                <listitem>
+                    <para>options - you will need to use specific <code>xproc:options</code> syntax
+                        for specifying </para>
+                </listitem>
+                <listitem>
+                    <para>variables - n/a</para>
+                </listitem>
+            </itemizedlist>
+            <para>The example shows how we can apply the <code>p:add-attribute</code> step operation
+                to an XML document;</para>
+            <example>
+                <title>invoking a step in XQuery</title>
+                <programlisting>xquery version "3.0";
+
+import module namespace std = "http://xproc.net/xproc/std" 
+  at "/xquery/steps/std.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+declare namespace xproc = "http://xproc.net/xproc";
+
+ <emphasis role="bold">std:add-attribute(&lt;test/>,(),&lt;xproc:options>
+    &lt;p:with-option name="match" select="*"/>
+    &lt;p:with-option name="attribute-name" select="id"/>        
+    &lt;p:with-option name="attribute-value" select="'test'"/>
+ &lt;/xproc:options>,())</emphasis></programlisting>
+            </example>
+        </sect2>
+        <sect2>
+            <title>Extending xproc.xq with pure xquery steps</title>
+            <para>Creating an extension step using pure XQuery is straightforward in xproc.xq. You
+                just add your new step function into the src/steps/ext.xqy, ensuring to mark it with
+                the %xproc:step annotation</para>
+            <example>
+                <title>new ext:mynewstep function</title>
+                <programlisting>declare
+%xproc:step
+function ext:mynewstep($primary,$secondary,$options,$variables){
+    &lt;my-new-step>my new step&lt;/my-new-step
+};  </programlisting>
+            </example>
+            <para> All that is required is to add this new step's definition into the internal XProc
+                library which defines extensions, at src/etc/pipeline-extensions.xml.</para>
+            <example>
+                <title>ext step library</title>
+                <programlisting>&lt;p:library xmlns:p ="http://www.w3.org/ns/xproc" 
+                    xmlns:ext ="http://xproc.net/xproc/ext"
+                    xmlns:xproc = "http://xproc.net/xproc"
+                    name="xprocxq-extension-library">
+                        
+    &lt;p:declare-step type="ext:pre" xproc:step="true"
+                    xproc:bindings="all" xproc:support="true" xproc:func="ext:pre#4">
+        &lt;p:input port="source" primary="true" sequence="true" select="/"/>
+        &lt;p:output port="result" primary="true" sequence="true" select="/"/>
+    &lt;/p:declare-step>
+
+    &lt;p:declare-step type="ext:post" xproc:step="true" xproc:func="ext:post#4" xproc:support="true">
+        &lt;p:input port="source" primary="true" sequence="true" select="/"/>
+        &lt;p:output port="result
+" primary="true" sequence="true" select="/"/>
+    &lt;/p:declare-step> 
+
+    &lt;p:declare-step type="ext:xproc" xproc:step="true" xproc:func="ext:xproc#4" xproc:support="true">
+        &lt;p:input port="source" primary="true" select="/"/>
+        &lt;p:input port="pipeline" primary="false" select="/"/>
+        &lt;p:input port="bindings" primary="false" select="/"/>
+        &lt;p:output port="result" primary="true"/>
+        &lt;p:option name="dflag" select="0"/>
+        &lt;p:option name="tflag" select="0"/>
+    &lt;/p:declare-step>
+
+    &lt;p:declare-step type="ext:xsltforms"  xproc:step="true" xproc:func="ext:xsltforms" xproc:support="true">
+           &lt;p:input port="source" sequence="true" primary="true" select="/"/>
+           &lt;p:output port="result" primary="true" select="/"/>
+           &lt;p:option name="xsltformsURI"/>
+           &lt;p:option name="debug"/>
+    &lt;/p:declare-step>
+
+<emphasis role="bold">    &lt;p:declare-step type="ext:mynewstep"  xproc:step="true" xproc:func="ext:mynewstep" xproc:support="true">
+           &lt;p:input port="source" sequence="true" primary="true" select="/"/>
+           &lt;p:output port="result" primary="true" select="/"/>
+    &lt;/p:declare-step></emphasis>
+
+&lt;/p:library></programlisting>
+            </example>
+            <para>The library markup contains some extra attributes, which assist the dynamic
+                evaluation stage validate a step's signature.</para>
+            <para>You will never need to use a <code>p:import</code> statement to use the extension
+                steps as they library is loaded automatically. </para>
+            <para>The standard and optional steps are implemented in a similar manner, but these
+                libraries should only contain steps defined in the XProc specification.</para>
+        </sect2>
+        <sect2>
+            <title xml:id="byosr">BYOSR (bring your own step runner)</title>
+            <para>The following code listing shows the overloaded version of the
+                    <code>xprocxq:xq()</code> function where you can pass it a function that
+                evaluates each step function (the default for this is $xproc:eval-step-func). During
+                dynamic evaluation, this step runner is responsible for executing each step's
+                function.</para>
+            <example>
+                <title>step runner</title>
+                <programlisting>xquery version "3.0";
+
+import module namespace xprocxq = "http://xproc.net/xprocxq" 
+  at "/xquery/xproc.xq";
+import module namespace xproc = "http://xproc.net/xproc" 
+  at "/xquery/core/xproc-impl.xqy";
+import module namespace u = "http://xproc.net/xproc/util" 
+  at "/xquery/core/util.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline :=   &lt;p:declare-step version='1.0'>
+    &lt;p:input port="source" sequence="true"/>
+    &lt;p:output port="result"/>
+    &lt;p:count/>
+  &lt;/p:declare-step>
+        
+let $stdin    :=  (&lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>,
+  &lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>,
+  &lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>)
+  let $dflag    := 0
+  return xprocxq:xq($pipeline,$stdin,(),(),(),$dflag,0,<emphasis role="bold">$xproc:eval-step-func</emphasis>)   </programlisting>
+            </example>
+            <para>Looking up <code>$xproc:eval-step-func()</code> in src/core/xproc-impl.xqy we see
+                it has 4 parameters in its signature, so we could easily rewrite as an anonymous
+                function, as shown in bold in the amended code listing</para>
+            <example>
+                <title>anonymous function as step runner</title>
+                <programlisting>xquery version "3.0";
+
+import module namespace xprocxq = "http://xproc.net/xprocxq" 
+  at "/xquery/xproc.xq";
+import module namespace xproc = "http://xproc.net/xproc" 
+  at "/xquery/core/xproc-impl.xqy";
+import module namespace u = "http://xproc.net/xproc/util" 
+  at "/xquery/core/util.xqy";
+
+declare namespace p="http://www.w3.org/ns/xproc";
+
+let $pipeline :=   &lt;p:declare-step version='1.0'>
+    &lt;p:input port="source" sequence="true"/>
+    &lt;p:output port="result"/>
+    &lt;p:count/>
+  &lt;/p:declare-step>
+        
+let $stdin    :=  (&lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>,
+  &lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>,
+  &lt;document>
+    &lt;doc xmlns=""/>
+  &lt;/document>)
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  return 
+  xprocxq:xq($pipeline,$stdin,(),(),(),$dflag,0,<emphasis role="bold">function($step,$namespaces,$input,$ast){$xproc:eval-step-func($step,$namespaces,$input,$ast)}</emphasis>)</programlisting>
+            </example>
+            <para>Everything works as it does before, all we've done is provide an anonymous
+                function wrapper around our dynamic invocation. </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>$step - contains the <code>xproc:default-name</code> for the
+                            step</para>
+                    </listitem>
+                    <listitem>
+                        <para>$namespaces- list of declared namespaces</para>
+                    </listitem>
+                    <listitem>
+                        <para>$input - usually contains primary input port value for a step</para>
+                    </listitem>
+                    <listitem>
+                        <para>$ast - the decorated pipeline is passed in and used as a kind of
+                            'lookup' table</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>What if we wanted to do some additional processing with each step or preprocess
+                any of the parameters ? We can use this anonymous function idiom to trivially insert
+                new runtime behaviors without having to amend a line of the core xproc.xq code
+                itself.</para>
+            <example>
+                <title>enhancing step runner with anonymous function</title>
+                <programlisting>function($step,$namespaces,$input,$ast){
+let $log :=  u:log("processing step: " || $step || " at " || fn:current-dateTime() )
+return
+    $xproc:eval-step-func($step,$namespaces,$input,$ast)}
+)</programlisting>
+            </example>
+            <para> The example uses <code>u:log()</code> function which is a wrapper to the vendors
+                own log function. </para>
+            <para>When we run the pipeline now and observe MarkLogic's ErrorLog.txt file, we see a
+                trace of each step's name and the timestamp when processed.</para>
+            <para>Alternately, we could have opted to implement a step that does this logging, but
+                this would be presumably a step that does nothing with the input and worst does not
+                output anything (or just copies input to output like <code>p:identity</code> step).
+                Just like functions with no input or return no output, steps that do nothing with
+                the flowing XML document(s) indicate that some 'impure' processing with side effects
+                is going on. This idiom allows you to mitigate the impact 'out of band'
+                processing.</para>
+        </sect2>
+    </sect1>
+    <sect1>
+        <title>Summary</title>
+        <para>XProc provides the foundation which to create a facade over the bewildering array of
+            XML technologies in existence today. In this sense, XProc can be the the layer which
+            exposes a component architecture designed for provisioning reusable software. </para>
+        <para>The short term future for xproc.xq is;</para>
+        <itemizedlist>
+            <listitem>
+                <para>continue enhancing quality and adherence to the XProc specification </para>
+            </listitem>
+            <listitem>
+                <para>document performance within the MarkLogic database and enhance
+                    serialisation/persistence to the data layer</para>
+            </listitem>
+            <listitem>
+                <para>With help from the community, I would like to see xproc.xq running on other
+                    vendor XQuery 3.0 processors.</para>
+            </listitem>
+            <listitem>
+                <para>replace parsing with solution based on <link linkend="rex">Gunther
+                        Rademacher's REx Parser Generator</link>
+                </para>
+                
+            </listitem>
+        </itemizedlist>
+        <para>With xproc.xq release, it now transitions from my own personal 'workbench' to
+            something I hope others find as useful as I've found it instructive in
+            developing.</para>    </sect1>
+    <sect1>
+        <title>Appendix</title>
+        <sect2>
+            <title xml:id="xproc.xq-install">Getting and installing xproc.xq</title>
+            <para>The only dependency for xproc.xq is an installed and available MarkLogic Server
+                version 6.03 or later,</para>
+            <para>Download xproc.xq from https://github.com/xquery/xproc.xq and follow the
+                up-to-date installation instructions contained in the README.</para>
+        </sect2>
+        <sect2>
+            <title>References</title>
+            <bibliolist>
+                <bibliomixed xml:id="apache-lic-v2">[Apache v2 License] Apache v2.0 License -
+                    http://www.apache.org/licenses/LICENSE-2.0.html</bibliomixed>
+                <bibliomixed xml:id="xml-calabash">[XML Calabash] Norm Walsh's XProc processor XML
+                    Calabash - http://xmlcalabash.com/</bibliomixed>
+                <bibliomixed>[EXIST] eXist XML Database - http://exist.sourceforge.net</bibliomixed>
+                <bibliomixed xml:id="fsm">[Finite State Machine] Finite State Machine (FSM) entry at
+                    wikipedia - https://en.wikipedia.org/wiki/Finite-state_machine</bibliomixed>
+                <bibliomixed xml:id="saxon">[SAXON] Michael Kay's XSLT &amp; XQUERY Processor -
+                    http://www.saxonica.com</bibliomixed>
+                <bibliomixed xml:id="transform-xq">[transform.xq] John Snelson's transform.xq -
+                    https://github.com/jpcs/transform.xq</bibliomixed>
+                <bibliomixed>[MarkLogic] MarkLogic - http://www.marklogic.com</bibliomixed>
+                <bibliomixed xml:id="kay2010">[BALISAGE-Kay2010] Kay, Michael. “A Streaming XSLT
+                    Processor.” Presented at Balisage: The Markup Conference 2010, Montréal, Canada,
+                    August 3 - 6, 2010. In Proceedings of Balisage: The Markup Conference 2010.
+                    Balisage Series on Markup Technologies, vol. 5 (2010).
+                    doi:10.4242/BalisageVol5.Kay01. -
+                    http://www.balisage.net/Proceedings/vol5/html/Kay01/BalisageVol5-Kay01.html</bibliomixed>
+                <bibliomixed xml:id="kay2009">[BALISAGE-Kay2009] Kay, Michael. “You Pull, I’ll Push:
+                    on the Polarity of Pipelines.” Presented at Balisage: The Markup Conference
+                    2009, Montréal, Canada, August 11 - 14, 2009. In Proceedings of Balisage: The
+                    Markup Conference 2009. Balisage Series on Markup Technologies, vol. 3 (2009).
+                    doi:10.4242/BalisageVol3.Kay01. -
+                    http://www.balisage.net/Proceedings/vol3/html/Kay01/BalisageVol3-Kay01.html</bibliomixed>
+                <bibliomixed xml:id="rex">[REX] - Gunther Rademacher's REx Parser Generator -
+                    http://www.bottlecaps.de/rex/</bibliomixed>
+                <bibliomixed xml:id="xmlprocwg">[XMLPROCWG] XML Processing Working Group -
+                    http://www.w3.org/XML/Processing/</bibliomixed>
+                <bibliomixed xml:id="xml-catalog">[XML-CATALOG] XML catalog -
+                    http://en.wikipedia.org/wiki/XML_Catalog</bibliomixed>
+                <bibliomixed xml:id="xproc-spec">[XProc] XProc: An XML Pipeline LanguageW3C
+                    Recommendation 11 May 2010 - http://www.w3.org/TR/xproc</bibliomixed>
+                <bibliomixed xml:id="xproc-use-case-note">[XProc Requirements] XProc XML Processing
+                    Model Requirements W3C Working Group Note 05 April 2004 -
+                    http://www.w3.org/TR/2004/NOTE-proc-model-req-20040405/</bibliomixed>
+                <bibliomixed xml:id="xproc-member-submission-xpl">[XPL] XML Pipeline Language (XPL)
+                    Version 1.0 (Draft) W3C Member Submission 11 April 2005 -
+                    http://www.w3.org/Submission/xpl/</bibliomixed>
+                <bibliomixed xml:id="xproc-use-cases">[XProc Use Cases] XProc Use Cases -
+                    http://www.w3.org/TR/xproc-requirements/</bibliomixed>
+                <bibliomixed xml:id="xprov-vnext-requirements">[XProc vnext] XProc vnext language
+                    requirements - http://www.w3.org/XML/XProc/docs/langreq-v2.html</bibliomixed>
+                <bibliomixed xml:id="known-impl">[XProc Implementations] Known Implementations -
+                    http://xproc.org/implementations/</bibliomixed>
+                <bibliomixed xml:id="XPROC-PARALLELISM">[XPROC- PARALLELISM] XProc specification H.
+                    Sequential Steps, parallelism, and side-effects -
+                    http://www.w3.org/TR/xproc/#parallelism</bibliomixed>
+                <bibliomixed xml:id="XPROC-TEST-SUITE">[XPROC-TEST-SUITE] XProc Test Suite -
+                    http://tests.xproc.org/</bibliomixed>
+                <bibliomixed xml:id="xray">[XRAY] - Rob Whitby's XRay -
+                    https://github.com/robwhitby/xray</bibliomixed>
+                <bibliomixed xml:id="xproc-system-properties">[XPROC-SYSTEM-PROPERTIES] XProc system
+                    properties - http://www.w3.org/TR/xproc/#f.system-property</bibliomixed>
+                <bibliomixed xml:id="xslt-2">[XSLT 2.0] XSL Transformations (XSLT) Version 2.0.
+                    Michael Kay, editor. W3C Recommendation. 23 January 2007. -
+                    http://www.w3.org/TR/xslt20/</bibliomixed>
+                <bibliomixed xml:id="xproc.xq">[xproc.xq project] xproc.xq github -
+                    https://github.com/xquery/xproc.xq</bibliomixed>
+                <bibliomixed xml:id="zergaoui2009">[Zergaoui2009] Mohamed Zergaoui. Memory
+                    management in streaming: Buffering, lookahead, or none. Which to choose? Int
+                    Symp on Processing XML Efficiently. 10 Aug 2009, Montreal, Canada. Balisage
+                    Series on Markup Technologies, vol. 4 (2009). doi:
+                    10.4242/BalisageVol4.Zergaoui02. -
+                    http://www.balisage.net/Proceedings/vol4/html/Zergaoui02/BalisageVol4-Zergaoui02.html
+                </bibliomixed>
+            </bibliolist>
+        </sect2>
+    </sect1>
+</article>

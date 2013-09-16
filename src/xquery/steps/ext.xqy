@@ -22,17 +22,21 @@ xquery version "3.0" encoding "UTF-8";
 
 module namespace ext = "http://xproc.net/xproc/ext";
 
+import module namespace const = "http://xproc.net/xproc/const"
+  at "/xquery/core/const.xqy";
+
+import module namespace u = "http://xproc.net/xproc/util"
+  at "/xquery/core/util.xqy";
+
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
-import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
-
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare copy-namespaces no-preserve, no-inherit;
+
 
 (: -------------------------------------------------------------------------- :)
 declare

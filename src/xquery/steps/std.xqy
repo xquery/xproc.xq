@@ -14,23 +14,25 @@
 
 xquery version "3.0" encoding "UTF-8";
 
-(: ------------------------------------------------------------------------------------- 
+(: ----------------------------------------------------------------------------
 
-	std.xqm - Implements all standard xproc steps.
-	
----------------------------------------------------------------------------------------- :)
+std.xqm - Implements all standard xproc steps.
+
+----------------------------------------------------------------------------- :)
 
 module namespace std = "http://xproc.net/xproc/std";
+
+import module namespace const = "http://xproc.net/xproc/const"
+  at "/xquery/core/const.xqy";
+
+import module namespace u = "http://xproc.net/xproc/util"
+  at "/xquery/core/util.xqy";
 
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
-
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
-import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
-
 declare namespace http = "http://www.expath.org/mod/http-client";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
@@ -38,8 +40,6 @@ declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare function std:ns-for-xslt($primary,$ns){
 
- let $_ := u:log($ns)
- return   
  ( (namespace {"xproc"} {"http://xproc.net/xproc"},
 namespace {"p"} {"http://www.w3.org/ns/xproc"},
 namespace {"c"} {"http://www.w3.org/ns/xproc-step"},
@@ -107,30 +107,31 @@ declare
 function std:add-xml-base($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
 let $ns :=$options/namespace
+let $node-uri := u:node-uri($primary)
 let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary,$ns)}
     {$const:xslt-output}
-<xsl:template match="/">
+     <xsl:strip-space elements="*"/>
+<xsl:template match="/*">
   <xsl:copy>
-    <xsl:attribute name="xml:base" select="base-uri(node())"/>
-    <xsl:apply-templates/>
+    <xsl:attribute name="xml:base" select="'{$node-uri}'"/>
+    <xsl:copy-of select="node()"/>
   </xsl:copy>
 </xsl:template>
-    
+
 <xsl:template match="element()">
   <xsl:copy>
     <xsl:apply-templates select="@*,node()"/>
   </xsl:copy>
 </xsl:template>
-       
+
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
   <xsl:copy/>
 </xsl:template>
-       
-</xsl:stylesheet>      
+
+</xsl:stylesheet>
 return
   u:transform($template,$primary)
-  
 };
 
 
@@ -354,6 +355,7 @@ declare
 %xproc:step
 function std:identity($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
+
 let $ns :=$options/namespace
 
 let $template := <xsl:stylesheet version="{$const:xslt-version}"  xmlns:p="http://www.w3.org/ns/xproc">
@@ -374,7 +376,6 @@ let $template := <xsl:stylesheet version="{$const:xslt-version}"  xmlns:p="http:
 
 return
   u:transform($template,$primary)
-  
 
 };
 
@@ -941,7 +942,7 @@ let $charset      := u:get-option('charset',$options,$primary)
 let $namespace    := u:get-option('namespace',$options,$primary)
 return
 
-  
+
   element{name(($primary/*,$primary)[1])}{
 (:  for $n in $ns return
         namespace {$n/@prefix} {$n/@URI}

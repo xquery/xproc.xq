@@ -12,25 +12,26 @@
 : limitations under the License.
 :)
 
-xquery version "3.0" encoding "UTF-8";
+xquery version "1.0-ml" encoding "UTF-8";
 
-(:~
+(:~ functions.xqm - defines xproc xpath extensions.
  :
- :	functions.xqm - defines xproc xpath extensions.
- : 
- :	
+ :
  :)
 
 module namespace func = "http://www.w3.org/ns/xproc";
+
+import module namespace const = "http://xproc.net/xproc/const"
+  at "/xquery/core/const.xqy";
 
 declare namespace c     = "http://www.w3.org/ns/xproc-step";
 declare namespace err   = "http://www.w3.org/ns/xproc-error";
 declare namespace xproc = "http://xproc.net/xproc";
 declare namespace xsl   = "http://www.w3.org/1999/XSL/Transform";
 
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
-
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
+
+declare option xdmp:mapping "false";
 
 (: -------------------------------------------------------------------------- :)
 
@@ -60,11 +61,12 @@ else if ($property eq 'p:xpath-version') then
 else if ($property eq 'p:psvi-supported') then
   $const:psvi-supported
 else
-  ()	
+  ()
 (:
 should throw a u:dynamicError('err:XD0015',"")
 :)
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare
@@ -77,67 +79,77 @@ function func:version-available($version as xs:decimal){
     "false"
 };
 
+
 (: -------------------------------------------------------------------------- :)
 declare
 %xproc:func
 function func:value-available($value1, $value2){
 (: -------------------------------------------------------------------------- :)
-    "true"
+fn:true()
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:value-available($value1){
 (: -------------------------------------------------------------------------- :)
-    "true"
+fn:true()
 };
 
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:step-available($step-name) as xs:boolean{
 (: -------------------------------------------------------------------------- :)
-    if(starts-with($step-name,'p')) then true() else false()
+fn:true()
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:iteration-position(){
 (: -------------------------------------------------------------------------- :)
-    "true"
+fn:true()
 };
 
+
 (: -------------------------------------------------------------------------- :)
-declare %xproc:func function func:xpath-version-available($version as xs:double) as xs:boolean{
+declare %xproc:func function func:xpath-version-available($version as xs:double)
+as xs:boolean
+{
 (: -------------------------------------------------------------------------- :)
     if ($version = 2.0) then true() else false()
 };
 
+
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:resolve-uri($value1){
 (: -------------------------------------------------------------------------- :)
-"true"
+fn:true()
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:resolve-uri($value1,$value2){
 (: -------------------------------------------------------------------------- :)
-"true"
+fn:true()
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:base-uri($value1){
 (: -------------------------------------------------------------------------- :)
-"true"
+fn:true()
 };
+
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:base-uri(){
 (: -------------------------------------------------------------------------- :)
-"true"
+fn:true()
 };
 
 
 (: -------------------------------------------------------------------------- :)
 declare %xproc:func function func:iteration-size(){
 (: -------------------------------------------------------------------------- :)
-"true"
+fn:true()
 };
 

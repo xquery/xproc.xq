@@ -33,13 +33,18 @@ declare namespace opt = "http://xproc.net/xproc/opt";
 declare namespace ext = "http://xproc.net/xproc/ext";
 declare namespace xxq-error = "http://xproc.net/xproc/error";
 
-import module namespace const = "http://xproc.net/xproc/const" at "/xquery/core/const.xqy";
+import module namespace const = "http://xproc.net/xproc/const"
+  at "/xquery/core/const.xqy";
 import module namespace mem = "http://xqdev.com/in-mem-update"
-    at "/MarkLogic/appservices/utils/in-mem-update.xqy";
+  at "/MarkLogic/appservices/utils/in-mem-update.xqy";
+import module namespace functx = "http://www.functx.com"
+  at "/MarkLogic/functx/functx-1.0-nodoc-2007-01.xqy";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare copy-namespaces no-preserve, no-inherit;
+
+declare option xdmp:mapping "false";
 
 (: declare option xdmp:output "method=xml";
 declare option xdmp:output "encoding=UTF8";
@@ -54,13 +59,32 @@ declare variable $u:inputMap as map:map := map:map();
 declare option xdmp:update "true";
 
 (: -------------------------------------------------------------------------- :)
-(:~ Processor Specific                                                         :)
+(:~ Processor Specific                                                        :)
 (: -------------------------------------------------------------------------- :)
 
+declare function u:node-uri(
+    $node as item()
+) as xs:string
+{
+    xdmp:node-uri($node)
+};
+
+declare function u:make-map-name(
+  $step-name as xs:string,
+  $port as xs:string
+) as xs:string
+{
+  $step-name || "#" || $port
+};
 
 declare function u:ns-axis($el){
     $el/namespace::*
 };
+
+declare function u:http-get($path){
+  xdmp:http-get($path)[2]
+};
+
 
 declare function u:document-get($path){
 xdmp:document-get( $const:module_root || $path,<options xmlns="xdmp:document-get">
@@ -107,28 +131,38 @@ declare function u:stopMap(){
 };
 
 declare function u:putInputMap(
+  $step-name as xs:string,
+  $port-name as xs:string,
+  $values as item()*  
+)
+{
+ u:putInputMap( u:make-map-name($step-name,$port-name), $values )  
+};
+
+declare function u:putInputMap(
   $key as xs:string,
-  $value as item()*
+  $values as item()*
 ) as item()*
 {
   try{ 
-    if($value) then
+    if($values) then
     xdmp:eval('
         import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
 
         declare option xdmp:update "true";
 
-        declare variable $value external;
+        declare variable $values external;
         declare variable $key external;
 
         let $uri := "/xproc/" || u:get-episode() || "/" || $key || ".xml"
         return  
         xdmp:document-insert($uri,
-        <u:root episode="{u:get-episode()}">{
-        for $v in $value
+        <u:root key="{$key}" episode="{u:get-episode()}">{
+          
+        for $v in $values/*
         return <u:entry id="{$key}">{$v}</u:entry>
         }</u:root>,(),("xproc"))',
-        (fn:QName("","value"),$value,
+        (fn:QName("","values"),element u:values {$values},
          fn:QName("","key"), $key))
     else ()
     }catch($e){ if ($e/error:code eq "XDMP-ARG") then xdmp:log("problem with: " || $key ) else xdmp:rethrow() }
@@ -136,11 +170,27 @@ declare function u:putInputMap(
 };
 
 declare function u:getInputMap(
+  $step-name as xs:string,
+  $port-name as xs:string
+)
+{
+ u:getInputMap( u:make-map-name($step-name,$port-name) )  
+};
+
+declare function u:getInputMap(
   $key as xs:string
 )
-{if (doc-available("/xproc/" || u:get-episode() || "/" || $key || ".xml")) then
-    collection("xproc")/u:root[@episode eq u:get-episode()]//u:entry[@id eq $key]/*
-else ()
+{
+    xdmp:eval('
+        import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+
+        declare option xdmp:update "false";
+
+        declare variable $key external;
+        
+        collection("xproc")/u:root[@episode eq u:get-episode()][@key eq $key]/u:entry/*
+       ',
+        ( fn:QName("","key"), $key))  
 };
 
 declare function u:getAllResult()
@@ -254,9 +304,9 @@ $xml
 (: -------------------------------------------------------------------------- :)
 declare function u:evalXPATH($xpath, $xml){
 (: -------------------------------------------------------------------------- :)
- let $document := document{$xml}
+ let $document := $xml
  return
-  if ($xpath eq '/' or $xpath eq '' or empty($xml)) then
+  if ($xpath eq '/' or $xpath eq () or $xpath eq '' or empty($xml)) then
     $document
   else
     u:xquery($xpath,$xml)
@@ -291,10 +341,13 @@ declare function u:xquery($query, $xml, $options){
 (: -------------------------------------------------------------------------- :)
 declare function u:xquery($query, $xml){
 (: -------------------------------------------------------------------------- :)
- let $context := document{$xml}       
+let $_ := u:log($query)
+ let $context := $xml  
  let $compile  :=  concat($const:default-ns,string($query))
  return
-      if (string-length($query) lt 2) then u:xprocxqError("EMPTY-INPUT","required query input is empty") else $xml/xdmp:value( normalize-space($query) ) 
+      if (string-length($query) eq 0)
+        then $context  (:u:xprocxqError("EMPTY-INPUT","required query input is empty"):)
+      else $xml/xdmp:value( normalize-space($query) ) 
 };
 
 

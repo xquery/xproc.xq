@@ -304,12 +304,10 @@ $xml
 (: -------------------------------------------------------------------------- :)
 declare function u:evalXPATH($xpath, $xml){
 (: -------------------------------------------------------------------------- :)
- let $document := $xml
- return
   if ($xpath eq '/' or $xpath eq () or $xpath eq '' or empty($xml)) then
-    $document
+    $xml
   else
-    u:xquery($xpath,$xml)
+    u:xquery($xpath,if($xml instance of document-node()) then $xml else document{$xml})
 };
 
 
@@ -341,7 +339,6 @@ declare function u:xquery($query, $xml, $options){
 (: -------------------------------------------------------------------------- :)
 declare function u:xquery($query, $xml){
 (: -------------------------------------------------------------------------- :)
-let $_ := u:log($query)
  let $context := $xml  
  let $compile  :=  concat($const:default-ns,string($query))
  return

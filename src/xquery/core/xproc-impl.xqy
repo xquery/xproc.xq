@@ -252,8 +252,14 @@ function xproc:for-each(
 (: -------------------------------------------------------------------------- :)
 let $namespaces  := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
-let $iteration-select as xs:string := $currentstep/ext:pre/p:iteration-source/@select/data(.)
-let $ast := <p:declare-step>{$currentstep}</p:declare-step>
+let $iteration-select as xs:string := ($currentstep/ext:pre/p:iteration-source/@select/data(.),"/")[1]
+let $sorted := parse:pipeline-step-sort($currentstep/node(),())
+let $ast :=
+  <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >
+    <p:input port="source"/>
+    <p:output port="result"/>
+    {$sorted}
+  </p:declare-step>
 
 let $iteration-source :=
     xproc:resolve-port-binding(
@@ -263,26 +269,27 @@ let $iteration-source :=
         $currentstep)
 
 let $context :=
-($iteration-source,
-        xproc:eval-primary(
+  ($iteration-source,
+   xproc:eval-primary(
             $ast,
             $currentstep,
             $primary,
             ()
-        ))[1]
+        )
+  )[1]
 
-let $sorted := parse:pipeline-step-sort($currentstep/node(),())
-let $ast :=
-  <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >
-    <p:input port="source"/>
-    <p:output port="result"/>
-    {$sorted}
-  </p:declare-step>
-
+  let $_ := u:log( u:value($context,$iteration-select) )
 let $result :=
-  for $item in u:evalXPATH($iteration-select,$context)
+  for $item in u:value($context,$iteration-select)
   return output:interim-serialize(
-      xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
+      xproc:evalAST(
+          $ast,
+          $xproc:eval-step-func,
+          $namespaces,
+          $item,
+          (),
+          ())
+      ,0,1)
 
 return $result
 };

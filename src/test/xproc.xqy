@@ -379,53 +379,7 @@ declare %test:case function  test:runTryCatch2() {
 
 
 
-declare %test:ignore function test:runForEach1() { 
-  let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
-<p:input port="source"/>
-  <p:output port="result" sequence="true"/>
-<p:for-each>
-<p:iteration-source select="/c/a"/>
-<p:wrap wrapper="wrap" match="/"/>
-</p:for-each>
-</p:declare-step>
-  let $stdin    := <c><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><b>10</b></c>
-  let $dflag    := 1
-  let $tflag    := 0
-  let $bindings := ()
-  let $options  := ()
-  let $outputs  := ()
-  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
-  return
-     assert:equal($result,(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>1</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>2</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>3</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>4</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>5</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>6</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>7</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>8</a>
-      </wrap>,
-      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
-	<a>9</a>
-      </wrap>))
-};
-
-declare %test:ignore %test:ignore function test:runForEach2() { 
+declare %test:case function test:runForEach1() { 
   let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
 <p:input port="source"/>
   <p:output port="result" sequence="true"/>
@@ -469,6 +423,75 @@ declare %test:ignore %test:ignore function test:runForEach2() {
       <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
 	<a>9</a>
       </wrap>))
+};
+
+declare %test:case function test:runForEach2() { 
+  let $pipeline := <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
+<p:input port="source"/>
+  <p:output port="result" sequence="true"/>
+<p:for-each>
+<p:iteration-source select="/c/a"/>
+<p:wrap wrapper="wrap" match="/"/>
+</p:for-each>
+</p:declare-step>
+  let $stdin    := <c><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><b>10</b></c>
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
+  return
+     assert:equal($result,(<wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>1</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>2</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>3</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>4</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>5</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>6</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>7</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>8</a>
+      </wrap>,
+      <wrap xmlns:p="http://www.w3.org/ns/xproc" xmlns="">
+	<a>9</a>
+      </wrap>))
+};
+
+
+declare %test:case function test:runForEach3() {
+  let $pipeline :=
+      <p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc">
+      <p:input port="source" sequence="true"/>
+      <p:output port="result" sequence="true"/>
+
+      <p:for-each>
+        <p:identity/>
+      </p:for-each>
+    </p:declare-step>
+
+  let $stdin    := (<doc>a</doc>,<doc>b</doc>)
+  let $dflag    := 0
+  let $tflag    := 0
+  let $bindings := ()
+  let $options  := ()
+  let $outputs  := ()
+  let $result := xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
+  return
+     assert:equal($result, (<doc>a</doc>,<doc>b</doc>))
 };
 
 
@@ -768,14 +791,13 @@ declare %test:case function  test:runChoose5() {
       </p:identity>
     </p:when>
     <p:otherwise>
-      <!--p:identity>
+      <p:identity>
         <p:input port="source">
           <p:inline>
             <result>Otherwise Incorrect</result>
           </p:inline>
         </p:input>
-      </p:identity-->
-      <p:identity/>
+      </p:identity>
   </p:otherwise>
   </p:choose>
 </p:declare-step>
@@ -785,7 +807,7 @@ declare %test:case function  test:runChoose5() {
   let $bindings := ()
   let $options  := ()
   let $outputs   := ()
-  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
+  let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
       assert:equal($result,  <result xmlns="">Correct</result>)
 };

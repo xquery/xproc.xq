@@ -22,7 +22,6 @@ xquery version "3.0"  encoding "UTF-8";
 
 module namespace xproc = "http://xproc.net/xproc";
 
-
 import module namespace     p  = "http://www.w3.org/ns/xproc"
   at "/xquery/funcs/functions.xqy";
 
@@ -112,8 +111,9 @@ function xproc:group(
 (: -------------------------------------------------------------------------- :)
 let $namespaces  := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
-let $sorted := parse:pipeline-step-sort(  $currentstep/node(), ())  
-let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >{$sorted}
+let $sorted := parse:pipeline-step-sort(  $currentstep/node(), ())
+let $ast := <p:declare-step name="{$defaultname}"
+    xproc:default-name="{$defaultname}" >{$sorted}
 </p:declare-step>
 return
    output:interim-serialize(
@@ -166,7 +166,6 @@ let $ast-catch := <p:declare-step xproc:default-name="{$defaultname}">
 
  (:~ p:choose step implementation
  :
- :  I have decided to 
  :
  : @param $primary -
  : @param $secondary -
@@ -186,26 +185,25 @@ function xproc:choose(
 
 let $ast := <p:declare-step>{$currentstep}</p:declare-step>
 let $namespaces := xproc:enum-namespaces($currentstep)
-
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
 
-let $xpath-context as element(p:xpath-context) :=
-    $currentstep/ext:pre/p:xpath-context
+let $xpath-context :=
+    xproc:resolve-port-binding(
+        $currentstep/ext:pre/p:xpath-context/*,
+        (),
+        $ast,
+        $currentstep)
 
 let $context :=
-xproc:eval-primary(
-   $ast,
-   $currentstep,
-   $primary,
-   ()
- )
-(:
-    xproc:resolve-port-binding(
-     $xpath-context/(p:pipe|p:inline),
-     (),
-     $ast,
-     $currentstep)
-:)
+if($xpath-context)
+    then $xpath-context
+    else
+        xproc:eval-primary(
+            $ast,
+            $currentstep,
+            $primary,
+            ()
+        )
 
 let $when-test := for $when at $count in $currentstep/p:when
           let $check-when-test := u:assert(not($when/@test eq ''),"p:choose when test attribute cannot be empty")
@@ -239,7 +237,7 @@ return
  : @param $options -
  : @param $currentstep -
  :
- : @returns 
+ : @returns
  :)
 (: -------------------------------------------------------------------------- :)
 declare
@@ -254,22 +252,39 @@ function xproc:for-each(
 (: -------------------------------------------------------------------------- :)
 let $namespaces  := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
-let $iteration-select as xs:string := string($currentstep/ext:pre/p:iteration-source/@select)
+let $iteration-select as xs:string := $currentstep/ext:pre/p:iteration-source/@select/data(.)
+let $ast := <p:declare-step>{$currentstep}</p:declare-step>
 
-let $source := if ($currentstep/ext:pre/p:iteration-source/*) then
-  $currentstep/ext:pre/p:iteration-source/p:inline/node()
-else
-  $primary
-let $sorted := parse:pipeline-step-sort($currentstep/node(),())  
-let $ast := <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" ><p:input port="source"/>
-<p:output port="result"/>{$sorted}   
-</p:declare-step>
+let $iteration-source :=
+    xproc:resolve-port-binding(
+        $currentstep/ext:pre/p:iteration-source/*,
+        (),
+        $ast,
+        $currentstep)
 
-let $result :=     
-for $item in u:evalXPATH($iteration-select,document{$source})
-return    
-  output:interim-serialize(xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
-return $result    
+let $context :=
+($iteration-source,
+        xproc:eval-primary(
+            $ast,
+            $currentstep,
+            $primary,
+            ()
+        ))[1]
+
+let $sorted := parse:pipeline-step-sort($currentstep/node(),())
+let $ast :=
+  <p:declare-step name="{$defaultname}" xproc:default-name="{$defaultname}" >
+    <p:input port="source"/>
+    <p:output port="result"/>
+    {$sorted}
+  </p:declare-step>
+
+let $result :=
+  for $item in u:evalXPATH($iteration-select,$context)
+  return output:interim-serialize(
+      xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$item,(),()) ,0,1)
+
+return $result
 };
 
 
@@ -280,7 +295,7 @@ return $result
  : @param $options -
  : @param $currentstep -
  :
- : @returns 
+ : @returns
  :)
 (: -------------------------------------------------------------------------- :)
 declare
@@ -352,18 +367,18 @@ return
  : @param $a -
  : @param $b -
  :
- : @returns 
+ : @returns
  :)
  (: ------------------------------------------------------------------------- :)
  declare function xproc:resolve-external-bindings($a,$b) {
  (: ------------------------------------------------------------------------- :)
-() 
+ ()
  };
 
 
  (:~ generates a sequence of xs:string containing step names
  :
- : @param $step - 
+ : @param $step -
  :
  : @returns xs:string of xproc:default-name
  :)
@@ -380,7 +395,7 @@ return
  :
  : @param $href - href of document you wish to access
  :
- : @returns 
+ : @returns
  :)
  (: ------------------------------------------------------------------------- :)
  declare function xproc:resolve-document-binding($href as xs:string) as item(){
@@ -393,7 +408,7 @@ return
           let $doc := doc($href)/node()
           return std:add-xml-base($doc,(),(),())
 (:
-  try {              
+  try {
       } catch * {
           u:dynamicError('xprocerr:XD0002',
             concat(" cannot access document ",$href))
@@ -454,23 +469,22 @@ else
  (: ------------------------------------------------------------------------- :)
  let $ns := u:enum-ns(<dummy>{$currentstep}</dummy>)
  let $exclude-result-prefixes as xs:string := string($inline/@exclude-inline-prefixes)
-
  let $template := <xsl:stylesheet version="2.0" exclude-result-prefixes="{$exclude-result-prefixes}">
        {for $n in $ns return
        if($n/@URI ne '') then namespace {$n/@prefix} {$n/@URI} else ()
        }
        {$const:xslt-output}
-
+       <xsl:template match="/">
+         <xsl:copy-of select="*"/>
+       </xsl:template>
        <xsl:template match="element()">
          <xsl:copy>
            <xsl:apply-templates select="@*,node()"/>
          </xsl:copy>
        </xsl:template>
-
        <xsl:template match="attribute()|text()|comment()|processing-instruction()">
          <xsl:copy/>
        </xsl:template>
-    
 </xsl:stylesheet>
 
 return

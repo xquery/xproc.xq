@@ -819,8 +819,7 @@ return
 </xsl:element>
 </xsl:template>
 
-
-</xsl:stylesheet>      
+</xsl:stylesheet>
 return
   u:transform($template,$primary)
 };
@@ -831,7 +830,7 @@ declare
 %xproc:step
 function std:sink($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
-()
+ ()
 };
 
 

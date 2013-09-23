@@ -32,7 +32,7 @@ xdmp:document-get( '/Users/jfuller/Source/Webcomposite/xprocxq/src/test/tests.xp
        </options>)
      else $test/*/t:pipeline/*
 let $source   := if($test/*/t:input[@port eq "source"]/t:document) then $test/*/t:input[@port eq "source"]/t:document/* else $test/*/t:input[@port eq "source"]/*
-let $expected   :=$test/*/t:output[@port eq "result"]/*
+let $expected   :=if ($test//@error) then  $test//@error/data(.) else $test/*/t:output[@port eq "result"]/(if (t:document) then t:document/* else *)
 let $bindings := for $binding in $test/*/t:input[@port ne "source"]
   return
     <binding name="{$binding/@port/data(.)}">{if ($binding/t:document) then $binding/t:document/* else $binding/*}</binding> 
@@ -43,23 +43,27 @@ return
     <test uri="{$uri}" error="{$test//@error}">
 {
 
-let $result := try{ xprocxq:xq($pipeline,$source,$bindings,$options,(),$dflag,$tflag) }catch($e){$e}
+let $result := try{
+    xprocxq:xq($pipeline,$source,$bindings,$options,(),$dflag,$tflag)
+  }catch($e){
+    $e
+  }
 
-let $compare := deep-equal(u:strip-whitespace($expected),u:strip-whitespace($result[1]))
-        
+let $compare := if($test//@error) then () else deep-equal(u:strip-whitespace($expected),u:strip-whitespace($result))
+
 return
-<test-result pass="{if ($test//@error) then string($test//@error) eq string($result/*:name) else $compare}">
-<name>{if ($test/*/@error) then $result/*:name else ()}</name>
-<code>{if ($test/*/@error) then $result/*:code else ()}</code>
-<inputs>{$test/*/t:input}</inputs>
-<pipeline>{$pipeline}</pipeline>
-<source>{$source}</source>
-<result>{$result}</result>
-<expected>{$expected}</expected>
+<test-result pass="{if ($test//@error)
+then $test//@error/data(.) eq $result/*:name/data(.)
+else $compare}">
+  <name>{if ($test/*/@error) then $result/*:name else ()}</name>
+  <code>{if ($test/*/@error) then $result/*:code else ()}</code>
+  <inputs>{$test/*/t:input}</inputs>
+  <pipeline>{$pipeline}</pipeline>
+  <source>{$source}</source>
+  <result>{if($test//@error) then $result/error:name else $result}</result>
+  <expected>{$expected}</expected>
 </test-result>
-
 }
-
 </test>
 
 }

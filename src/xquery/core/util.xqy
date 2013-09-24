@@ -307,7 +307,10 @@ declare function u:evalXPATH($xpath, $xml){
   if ($xpath eq '/' or $xpath eq () or $xpath eq '' or empty($xml)) then
     $xml
   else
-    u:xquery($xpath,if($xml instance of document-node()) then $xml else document{$xml})
+    u:xquery($xpath,
+    if($xml instance of document-node())
+      then $xml
+      else document{$xml})
 };
 
 
@@ -337,14 +340,16 @@ declare function u:xquery($query, $xml, $options){
 
 
 (: -------------------------------------------------------------------------- :)
-declare function u:xquery($query, $xml){
-(: -------------------------------------------------------------------------- :)
- let $context := $xml  
+declare function u:xquery(
+    $query,
+    $xml
+){
+ let $context := $xml
  let $compile  :=  concat($const:default-ns,string($query))
  return
       if (string-length($query) eq 0)
-        then $context  (:u:xprocxqError("EMPTY-INPUT","required query input is empty"):)
-      else $xml/xdmp:value( normalize-space($query) ) 
+        then $context (:u:xprocxqError("EMPTY-INPUT","required query input is empty"):)
+        else $xml/xdmp:value( normalize-space($query) )
 };
 
 

@@ -249,9 +249,8 @@ function xproc:for-each(
     $currentstep
 )
 {
-(: -------------------------------------------------------------------------- :)
 let $namespaces  := xproc:enum-namespaces($currentstep)
-let $defaultname as xs:string := string($currentstep/@xproc:default-name)
+let $defaultname as xs:string := $currentstep/@xproc:default-name/data(.)
 let $iteration-select as xs:string := ($currentstep/ext:pre/p:iteration-source/@select/data(.),"/")[1]
 let $sorted := parse:pipeline-step-sort($currentstep/node(),())
 let $ast :=
@@ -269,18 +268,22 @@ let $iteration-source :=
         $currentstep)
 
 let $context :=
-  ($iteration-source,
-   xproc:eval-primary(
+    if ($iteration-source)
+        then
+        u:evalXPATH($iteration-select,
+        $iteration-source)
+        else
+        u:evalXPATH($iteration-select,
+            xproc:eval-primary(
             $ast,
             $currentstep,
             $primary,
             ()
-        )
-  )[1]
+       )
+      )
 
-  let $_ := u:log( u:value($context,$iteration-select) )
 let $result :=
-  for $item in u:value($context,$iteration-select)
+  for $item in $context
   return output:interim-serialize(
       xproc:evalAST(
           $ast,
@@ -289,7 +292,7 @@ let $result :=
           $item,
           (),
           ())
-      ,0,1)
+      ,0,1) 
 
 return $result
 };

@@ -35,8 +35,6 @@ declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 declare namespace http = "http://www.expath.org/mod/http-client";
 
-declare namespace atom="http://www.w3.org/2005/Atom";
-
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 

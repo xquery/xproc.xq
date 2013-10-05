@@ -616,7 +616,7 @@ let $_ := u:putInputMap($step-name, ($pinput/@port/data(.),"result")[1], $result
        else $primaryinput
 
 
-let $result := u:evalXPATH( $pinput/@select/data(.),if($data instance of document-node()) then $data/element() else $data)
+let $result := u:evalXPATH( $pinput/@select/data(.), $data)
 let $_ := u:putInputMap( $step-name, ($currentstep/p:input[@primary eq 'true']/@port/data(.),"result")[1], $result)
  return
    if ($result) then     

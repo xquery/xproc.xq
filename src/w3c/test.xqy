@@ -49,7 +49,9 @@ let $result := try{
     $e
   }
 
-let $compare := if($test//@error) then () else deep-equal(u:strip-whitespace($expected),u:strip-whitespace($result))
+let $compare := if($test//@error)
+    then ()
+    else deep-equal(u:strip-whitespace($expected),u:strip-whitespace($result))
 
 return
 <test-result pass="{if ($test//@error)
@@ -85,7 +87,6 @@ let $xslt := <xsl:stylesheet
 
 <xsl:output indent="yes"/>
 
-
 <xsl:template match ='/'>
 <html>
 <body>
@@ -113,6 +114,15 @@ total=<xsl:value-of select="@total"/> | pass=<xsl:value-of select="@pass"/> | fa
 <xsl:apply-templates select="@pass"/>
 </td>
 <td>
+  <textarea rows="10" cols="80">
+  <xsl:copy-of select="pipeline/*"/>
+</textarea>
+  <textarea rows="10" cols="80">
+  <xsl:copy-of select="source"/>
+</textarea>
+</td>
+
+<td>
 <textarea rows="10" cols="80">
   <xsl:copy-of select="result"/>
 </textarea>
@@ -126,6 +136,15 @@ total=<xsl:value-of select="@total"/> | pass=<xsl:value-of select="@pass"/> | fa
 <td style="color:red">
 <xsl:apply-templates select="@pass"/>
 </td>
+<td>
+  <textarea rows="10" cols="80">
+  <xsl:copy-of select="pipeline/*"/>
+</textarea>
+  <textarea rows="10" cols="80">
+  <xsl:copy-of select="source"/>
+</textarea>
+</td>
+
 <td>
 <textarea rows="10" cols="80">
   <xsl:copy-of select="result"/>

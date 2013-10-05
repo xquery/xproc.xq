@@ -414,8 +414,8 @@ return
       u:http-get($href)
     else
       if(fn:doc-available($href))
-      then
-          let $doc := doc($href)/node()
+      then      
+          let $doc := doc($href)
           return std:add-xml-base($doc,(),(),())
 (:
   try {
@@ -570,7 +570,7 @@ return
           xproc:resolve-port-binding($input,$outputs,$ast,$currentstep) 
        else         
          u:getInputMap($pinput/p:pipe/@xproc:step-name, $pinput/p:pipe/@port/data(.))
-                    
+
 let $result :=  u:evalXPATH(string($pinput/@select),$data)
 let $_ := u:putInputMap($step-name, ($pinput/@port/data(.),"result")[1], $result)
  return
@@ -608,16 +608,16 @@ let $_ := u:putInputMap($step-name, ($pinput/@port/data(.),"result")[1], $result
    $outputs as item()*
  )
  {
-  let $step-name as xs:string := string($currentstep/@xproc:default-name)
+ let $step-name as xs:string := string($currentstep/@xproc:default-name)
  let $pinput as element(p:input)? := $currentstep/p:input[@primary eq 'true']
  let $data :=  if($pinput/*) then
        for $input in $pinput/*
        return xproc:resolve-port-binding($input,$outputs,$ast,$currentstep)
        else $primaryinput
 
-let $result := u:evalXPATH( $pinput/@select/data(.),$data)
 
- let $_ := u:putInputMap( $step-name, ($currentstep/p:input[@primary eq 'true']/@port/data(.),"result")[1], $result)
+let $result := u:evalXPATH( $pinput/@select/data(.),if($data instance of document-node()) then $data/element() else $data)
+let $_ := u:putInputMap( $step-name, ($currentstep/p:input[@primary eq 'true']/@port/data(.),"result")[1], $result)
  return
    if ($result) then     
      if ($result instance of document-node()) then $result else document{$result}

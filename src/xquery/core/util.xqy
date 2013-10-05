@@ -42,7 +42,7 @@ import module namespace functx = "http://www.functx.com"
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare copy-namespaces no-preserve, no-inherit;
+declare copy-namespaces preserve, inherit;
 
 declare option xdmp:mapping "false";
 
@@ -61,6 +61,10 @@ declare option xdmp:update "true";
 (: -------------------------------------------------------------------------- :)
 (:~ Processor Specific                                                        :)
 (: -------------------------------------------------------------------------- :)
+
+declare function u:unquote($data){
+    xdmp:unquote($data)
+};
 
 declare function u:node-uri(
     $node as item()
@@ -82,7 +86,12 @@ declare function u:ns-axis($el){
 };
 
 declare function u:http-get($path){
-  xdmp:http-get($path)[2]
+    
+let $xml :=    xdmp:http-get($path, <options xmlns="xdmp:document-get">
+       <format>xml</format>
+     </options>)[2]
+let $_ := u:log($xml)
+    return $xml
 };
 
 
@@ -378,7 +387,7 @@ declare function u:transform($stylesheet,$xml){
 (: -------------------------------------------------------------------------- :)
     if ($xml instance of document-node())
     then xdmp:xslt-eval($stylesheet, $xml )
-    else xdmp:xslt-eval($stylesheet, document{$xml} ) 
+    else xdmp:xslt-eval($stylesheet, document{$xml} )
 };
 
 (: -------------------------------------------------------------------------- :)

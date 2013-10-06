@@ -176,9 +176,7 @@ declare
 function std:delete($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 let $ns :=$options/namespace
-
 let $match as xs:string := u:get-option('match',$options,$primary)
-    let $_:=u:log($match)
 let $template as element(xsl:stylesheet):= <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary,$ns)}
     {$const:xslt-output}
@@ -200,10 +198,8 @@ let $template as element(xsl:stylesheet):= <xsl:stylesheet version="{$const:xslt
 
 
 </xsl:stylesheet>
-let $_ := u:log($template)
 return
   u:transform($template,$primary)
-
 };
 
 

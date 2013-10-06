@@ -98,7 +98,6 @@ declare function u:http-get($path){
 let $xml :=    xdmp:http-get($path, <options xmlns="xdmp:document-get">
        <format>xml</format>
      </options>)[2]
-let $_ := u:log($xml)
     return $xml
 };
 
@@ -346,13 +345,13 @@ declare function u:evalXPATH($xpath, $xml, $options){
 (: -------------------------------------------------------------------------- :)
 declare function u:xquery($query, $xml, $options){
 (: -------------------------------------------------------------------------- :)
- let $o := for $option in $options 
- let $value as xs:string := if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')
- return
-   concat(' declare variable $',$option/@name,' := ',$value,';')
+ let $o := string-join( for $opt in $options[@name ne ''][@select]
+  return "declare variable $" || $opt/@name/string(.) || ":=" || $opt/@select/string(.) || ";"
+      ," ")
  let $q :=  concat($o,' ',$query)
+ let $q2 := if(starts-with($query,'/') ) then $query else xdmp:eval($q)
  return
-   u:xquery($q,$xml)
+   u:xquery($q2,$xml)
 };
 
 

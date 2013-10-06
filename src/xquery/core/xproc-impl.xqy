@@ -652,6 +652,7 @@ declare function xproc:noop($a,$b,$c,$d){
  let $variables    := ()
  let $with-options :=  <xproc:options>
          {$namespaces}
+         {$ast/ext:pre/p:option}
          {$ast/*[@xproc:default-name eq $step]/p:with-option}
      </xproc:options>
  let $currentstep  := $ast/*[@xproc:default-name eq $step]

@@ -47,7 +47,7 @@ declare function xprocxq:xq(
     $stdin
     ) as item()*
 {
- xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)   
+ xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
 };
 
 declare function xprocxq:xq(
@@ -56,7 +56,7 @@ declare function xprocxq:xq(
     $evalstep
     ) as item()*
 {
- xproc:run($pipeline,$stdin,(),(),(),0,0,$evalstep)   
+ xproc:run($pipeline,$stdin,(),(),(),0,0,$evalstep)
 };
 
  (:~

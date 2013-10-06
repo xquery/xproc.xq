@@ -271,10 +271,12 @@ declare
 %xproc:step
 function std:filter($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
+
 let $select := u:get-option('select',$options,$primary)
 return
   try {
-    u:evalXPATH($select,$primary,$options[@name])
+    u:evalXPATH(
+       $select,$primary,$options/*[@name])
   }
   catch * {
     u:dynamicError('err:XD0016',": p:filter did not select anything - ")

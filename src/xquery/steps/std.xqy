@@ -230,20 +230,23 @@ declare
 %xproc:step
 function std:escape-markup($primary,$secondary,$options,$variables) {
 (: -------------------------------------------------------------------------- :)
+
 let $cdata-section-elements := u:get-option('cdata-section-elements',$options,$primary)
-let $doctype-public         := u:get-option('doctype-public',$options,$primary)
-let $doctype-system         := u:get-option('doctype-system',$options,$primary)
-let $escape-uri-attributes  := u:get-option('escape-uri-attributes',$options,$primary)
-let $include-content-type   := u:get-option('include-content-type',$options,$primary)
-let $indent                 := u:get-option('indent',$options,$primary)
-let $media-type             := u:get-option('media-type',$options,$primary)
-let $method                 := u:get-option('method',$options,$primary)
-let $omit-xml-declaration   := u:get-option('omit-xml-declaration',$options,$primary)
-let $standalone             := u:get-option('standalone',$options,$primary)
-let $undeclare-prefixes     := u:get-option('undeclare-prefixes',$options,$primary)
-let $version                := u:get-option('version',$options,$primary)
+let $doctype-public := u:get-option('doctype-public',$options,$primary)
+let $doctype-system := u:get-option('doctype-system',$options,$primary)
+let $escape-uri-attributes := u:get-option('escape-uri-attributes',$options,$primary)
+let $include-content-type := u:get-option('include-content-type',$options,$primary)
+let $indent := if ( u:get-option('indent',$options,$primary) eq 'false') then 'no' else 'yes'
+let $media-type := u:get-option('media-type',$options,$primary)
+let $method := u:get-option('method',$options,$primary)
+let $omit-xml-declaration := if ( u:get-option('omit-xml-declaration',$options,$primary) eq 'false') then 'no' else 'yes'
+let $standalone := u:get-option('standalone',$options,$primary)
+let $undeclare-prefixes := u:get-option('undeclare-prefixes',$options,$primary)
+let $version := u:get-option('version',$options,$primary)
 return
-  u:serialize($primary) 
+element {name($primary/node())} {
+  u:quote($primary/node(),$method,$indent,$omit-xml-declaration)
+}
 };
 
 

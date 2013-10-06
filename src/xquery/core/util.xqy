@@ -62,6 +62,14 @@ declare option xdmp:update "true";
 (:~ Processor Specific                                                        :)
 (: -------------------------------------------------------------------------- :)
 
+declare function u:quote($data,$method,$indent,$omit-xml-declaration){
+    xdmp:quote($data/*,<options xmlns="xdmp:quote">
+    <method>{$method}</method>
+    <indent>{$indent}</indent>
+    <omit-xml-declaration>{$omit-xml-declaration}</omit-xml-declaration>
+    </options>)
+};
+
 declare function u:unquote($data){
     xdmp:unquote($data)
 };
@@ -443,6 +451,8 @@ let $xpath as xs:string := string($options//p:with-option[@name eq $option-name]
 return
 if(starts-with($xpath,'&quot;') and ends-with($xpath,'&quot;')) then 
  substring($xpath, 2, string-length($xpath) - 1)
+else if(starts-with($xpath,"'") and ends-with($xpath,"'")) then 
+ substring($xpath, 2, string-length($xpath) - 2)
 else if ( starts-with($xpath,'http') or starts-with($xpath,'file')) then 
   replace($xpath,"'","")
 else 

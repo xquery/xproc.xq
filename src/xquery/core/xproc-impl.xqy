@@ -498,7 +498,7 @@ else
 </xsl:stylesheet>
 
 return
-  u:transform($template,$inline)
+  u:transform($template, $inline )
 };
 
 

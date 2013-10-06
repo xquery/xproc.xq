@@ -446,12 +446,7 @@ if(starts-with($xpath,'&quot;') and ends-with($xpath,'&quot;')) then
 else if ( starts-with($xpath,'http') or starts-with($xpath,'file')) then 
   replace($xpath,"'","")
 else 
-  replace($xpath,"'","")
-
-(:string(
-  u:evalXPATH($xpath,$primary,$options[@name])
-):)
-
+  $xpath
 };
 
 

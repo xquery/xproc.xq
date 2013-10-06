@@ -177,16 +177,17 @@ function std:delete($primary,$secondary,$options,$variables){
 (: -------------------------------------------------------------------------- :)
 let $ns :=$options/namespace
 
-let $match  as xs:string := u:get-option('match',$options,$primary)
-let $template := <xsl:stylesheet version="{$const:xslt-version}">
+let $match as xs:string := u:get-option('match',$options,$primary)
+    let $_:=u:log($match)
+let $template as element(xsl:stylesheet):= <xsl:stylesheet version="{$const:xslt-version}">
     {std:ns-for-xslt($primary,$ns)}
     {$const:xslt-output}
     {for $option in $options[@name]
         return
         <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
 }
-<xsl:template match="{if (starts-with($match,'/')) then substring-after($match,'/') else $match}"/>
 
+{element xsl:template { attribute {"match"} {$match}}}
 <xsl:template match="element()">
   <xsl:copy>
     <xsl:apply-templates select="@*,node()"/>
@@ -196,7 +197,10 @@ let $template := <xsl:stylesheet version="{$const:xslt-version}">
 <xsl:template match="attribute()|text()|comment()|processing-instruction()">
   <xsl:copy/>
 </xsl:template>
+
+
 </xsl:stylesheet>
+let $_ := u:log($template)
 return
   u:transform($template,$primary)
 

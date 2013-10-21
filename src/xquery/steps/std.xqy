@@ -311,16 +311,16 @@ let $version                := u:get-option('version',$options,$primary)
 let $href := $primary/c:request/@href
 let $method := $primary/c:request/@method
 let $content-type := $primary/c:request/c:body/@content-type
-let $body := $primary/c:request/c:body
+let $body := $primary/c:request/c:body/node()
 let $status-only := $primary/c:request/@status-only
 let $detailed := $primary/c:request/@detailed
-let $username := ''
-let $password := ''
-let $auth-method := ''
+let $username := $primary/c:request/@username/data()
+let $password := $primary/c:request/@password/data()
+let $auth-method := $primary/c:request/@auth-method/data()
 let $send-authorization := ''
 let $override-content-type := ''
 let $follow-redirect := ''
-let $http-request := <http:request href="{$href}" method="{$method}">{
+let $http-request := <http:request href="{$href}" method="{$method}" username="{$username}" password="{$password}" auth-method="{$auth-method}">{
             for $header in $primary/c:request/c:header
             return
                 <http:header name="{$header/@name}" value="{$header/@value}"/>,
@@ -333,7 +333,7 @@ let $http-request := <http:request href="{$href}" method="{$method}">{
               </http:body>
         }
            </http:request>
-           
+
 let $raw-response :=  u:send-request($http-request)
 
 let $response-body := if ($status-only) then
@@ -357,10 +357,10 @@ return
       {$response-headers}
       {$response-body}
     </c:response>
+    else if (contains($raw-response[1]/http:header[@name eq 'content-type']/@value,'html') or contains($raw-response[1]/http:header[@name eq 'content-type']/@value,'xml')) then
+        $response-body
     else if($raw-response[2] instance of xs:base64Binary) then
     <c:body content-type='{$raw-response[1]/http:header[@name eq 'content-type']/@value}' encoding="base64">{$raw-response[2]}</c:body>        
-    else if (contains($raw-response/http:header[@name eq 'content-type']/@value,'html') or contains($raw-response/http:header[@name eq 'content-type']/@value,'xml')) then
-        $response-body
     else if (starts-with($raw-response//http:header[@name eq 'content-type']/@value,'text')) then
     <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>
       {$raw-response[2]}

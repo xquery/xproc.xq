@@ -109,7 +109,9 @@ declare function http:make-content-items($resp as item()+)
          else if ( $type = ('XML', 'TEXT') ) then
             $resp[2]
          else if ( $type eq 'HTML' ) then
-            xdmp:tidy($resp[2])[2]
+            xdmp:tidy($resp[2],<options xmlns="xdmp:tidy">
+             <output-xhtml>no</output-xhtml><tidy-mark>no</tidy-mark><doctype>omit</doctype>
+                 <output-xml>yes</output-xml></options>)[2]
          else if ( $type eq 'BINARY' ) then
             xs:base64Binary($resp[2])
          else
@@ -316,6 +318,13 @@ declare function http:send-request($req as element(http:request))
                    </ml:headers>,
        $options := <ml:options> {
                       $headers,
+
+                       if ( $req/@auth-method ne "" and $req/@username ne "" and $req/@password ne "" ) then
+                      <ml:authentication method="{lower-case($req/@auth-method)}">
+                        <ml:username>{$req/@username/data(.)}</ml:username>
+                        <ml:password>{$req/@password/data(.)}</ml:password>
+                      </ml:authentication>
+                      else (),
                       if ( exists($body) ) then
                          <ml:data>{ http:serialize-data($body) }</ml:data>
                       else

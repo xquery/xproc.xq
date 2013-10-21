@@ -98,6 +98,8 @@ declare function u:ns-axis($el){
 
 declare function u:send-request($request){
     http:send-request($request)
+    ,   u:log(http:send-request($request))
+
 };
 
 

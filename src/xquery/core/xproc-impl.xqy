@@ -51,7 +51,9 @@ declare namespace xprocerr="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 declare namespace err="http://www.w3.org/2005/xqt-errors";
 
-declare copy-namespaces preserve, inherit;
+(:declare copy-namespaces preserve, inherit;:)
+declare copy-namespaces no-preserve, no-inherit;
+
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
@@ -208,7 +210,7 @@ if($xpath-context)
 let $when-test := for $when at $count in $currentstep/p:when
           let $check-when-test := u:assert(not($when/@test eq ''),"p:choose when test attribute cannot be empty")
           return
-             if ( u:value($context,$when/@test)) then $count else ()
+             if ( u:value($context,$when/@test/string(.),$options/*[@name])) then $count else ()
 return
   if($when-test) then
     let $when-sorted :=  parse:pipeline-step-sort( $currentstep/p:when[$when-test]/node()  , () )
@@ -619,10 +621,13 @@ let $_ := u:putInputMap($step-name, ($pinput/@port/data(.),"result")[1], $result
 let $result := u:evalXPATH( $pinput/@select/data(.), $data)
 let $_ := u:putInputMap( $step-name, ($currentstep/p:input[@primary eq 'true']/@port/data(.),"result")[1], $result)
  return
+     if ($result instance of document-node()) then $result else document{$result}
+(:
    if ($result) then     
      if ($result instance of document-node()) then $result else document{$result}
    else
-      u:dynamicError('xprocerr:XD0016',concat("xproc step ",$step-name, "did not select anything from p:input")) 
+      u:dynamicError('xprocerr:XD0016',concat("xproc step ",$step-name, "did not select anything from p:input"))
+      :)
 };
 
 
@@ -653,6 +658,7 @@ declare function xproc:noop($a,$b,$c,$d){
  let $with-options :=  <xproc:options>
          {$namespaces}
          {$ast/ext:pre/p:option}
+         {$ast/ext:pre/p:variable}
          {$ast/*[@xproc:default-name eq $step]/p:with-option}
      </xproc:options>
  let $currentstep  := $ast/*[@xproc:default-name eq $step]

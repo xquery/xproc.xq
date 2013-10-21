@@ -22,7 +22,7 @@ let $format := xdmp:get-request-field("format","xml")
 let $results :=
     element tests{
 
-for $uri in subsequence(cts:uri-match('*/' || $path ),1,1000)
+for $uri in subsequence(cts:uri-match('*/' || $path ),1,1000)[not(contains(.,"err-"))]
 
 let $test := fn:doc($uri)
 let $pipeline := if ($test/*/t:pipeline/@href/data(.)) then

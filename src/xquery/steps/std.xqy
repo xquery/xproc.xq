@@ -33,10 +33,9 @@ declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
-declare namespace http = "http://www.expath.org/mod/http-client";
+declare namespace http = "http://www.exslt.org/v2/http-client";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
-
 
 declare function std:ns-for-xslt($primary,$ns){
 
@@ -54,7 +53,11 @@ for $ns in distinct-values($element/descendant-or-self::*/(.)/in-scope-prefixes(
 return
   if ($ns eq 'xml' or $ns eq '')
         then ()
-        else namespace {$ns}{namespace-uri-for-prefix($ns,$element)}
+        else
+            for $e in $element
+                return
+
+            namespace {$ns}{namespace-uri-for-prefix($ns,$e)}
     )
 };
 
@@ -331,7 +334,7 @@ let $http-request := <http:request href="{$href}" method="{$method}">{
         }
            </http:request>
            
-let $raw-response := () (: http:send-request($http-request) :)
+let $raw-response :=  u:send-request($http-request)
 
 let $response-headers := for $header in $raw-response//http:header return <c:header name="{$header/@name}" value="{$header/@value}"/>
 
@@ -350,8 +353,14 @@ return
       {$response-headers}
       {$response-body}
     </c:response>
+    else if (contains($raw-response//http:header[@name eq 'content-type']/@value,'xml')) then
+        $response-body
+    else if (starts-with($raw-response//http:header[@name eq 'content-type']/@value,'text')) then
+    <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>
+      {$raw-response[2]}
+    </c:body>        
   else
-    $response-body
+      $response-body
 };
 
 

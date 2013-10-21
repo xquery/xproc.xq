@@ -40,6 +40,9 @@ import module namespace mem = "http://xqdev.com/in-mem-update"
 import module namespace functx = "http://www.functx.com"
   at "/MarkLogic/functx/functx-1.0-nodoc-2007-01.xqy";
 
+import module namespace http = "http://www.exslt.org/v2/http-client"
+  at "http-client.xqy";
+
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare copy-namespaces preserve, inherit;
@@ -93,6 +96,11 @@ declare function u:ns-axis($el){
     $el/namespace::*
 };
 
+declare function u:send-request($request){
+    http:send-request($request)
+};
+
+
 declare function u:http-get($path){
     
 let $xml :=    xdmp:http-get($path, <options xmlns="xdmp:document-get">
@@ -109,12 +117,14 @@ xdmp:document-get( $const:module_root || $path,<options xmlns="xdmp:document-get
        </options>)
 };
 
+
 declare function u:modules-root(){
     xdmp:modules-root()
-};    
+};
 
-declare function u:value($primary,$test){
-    $primary/xdmp:value( $test) 
+
+declare function u:value($primary,$test,$options){
+    $primary/xdmp:value($test)
 };
 
 declare function u:random(
@@ -346,9 +356,10 @@ declare function u:evalXPATH($xpath, $xml, $options){
 declare function u:xquery($query, $xml, $options){
 (: -------------------------------------------------------------------------- :)
  let $o := string-join( for $opt in $options[@name ne ''][@select]
-  return "declare variable $" || $opt/@name/string(.) || ":=" || $opt/@select/string(.) || ";"
+  return "declare variable $" ||
+      $opt/@name/string(.) || ":=" || $opt/@select/string(.) || ";"
       ," ")
- let $q :=  concat($o,' ',$query)
+ let $q :=  concat($o,' ',$query) (: may need an xdmp:unpath :)
  let $q2 := if(starts-with($query,'/') ) then $query else xdmp:eval($q)
  return
    u:xquery($q2,$xml)

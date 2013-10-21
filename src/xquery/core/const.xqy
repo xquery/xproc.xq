@@ -137,6 +137,9 @@ declare variable $const:default-ns as xs:string:='
     declare namespace n="http://xproc.org/ns/testsuite";
 
     declare default function namespace "http://www.w3.org/2005/xpath-functions";
+
+    declare copy-namespaces no-preserve, no-inherit;
+
 ';
 
 

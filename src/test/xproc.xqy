@@ -580,15 +580,11 @@ declare %test:case function  test:runIdentity4() {
   <p:input port="source"/>
   <p:output port="result"/>
 
-  <p:identity/>
-
-  <p:sink/>
-
-  <!--p:identity>
+  <p:identity>
     <p:input port="source">
       <p:inline><foo/></p:inline>
     </p:input>
-  </p:identity-->
+  </p:identity>
 
 </p:declare-step>
 

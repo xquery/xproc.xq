@@ -374,10 +374,9 @@ declare copy-namespaces preserve, inherit;
   let $s := $node
   return 
     element p:iteration-source {
-      
-
-      $s/*,
-      $s/@*}
+      $s/@*,  
+      $s/*
+    }
 };
 
  (:~

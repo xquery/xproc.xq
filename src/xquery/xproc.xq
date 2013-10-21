@@ -28,7 +28,6 @@ declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
 
-
  (:~
   : simplified entry point into xproc.xq returning the final serialized output of pipeline processing
   :
@@ -49,6 +48,17 @@ declare function xprocxq:xq(
 {
  xproc:run($pipeline,$stdin,(),(),(),0,0,$xproc:eval-step-func)
 };
+
+declare function xprocxq:xq(
+    $pipeline,
+    $stdin,
+    $time,
+    $debug as xs:integer
+    ) as item()*
+{
+ xproc:run($pipeline,$stdin,(),(),(),$debug,0,$xproc:eval-step-func)
+};
+
 
 declare function xprocxq:xq(
     $pipeline,

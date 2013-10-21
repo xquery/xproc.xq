@@ -260,6 +260,14 @@ return
   u:transform($template,$xml)
 };
 
+declare function u:is-binary($item){
+fn:boolean($item/binary())
+};
+
+declare function u:base64($item){
+xdmp:base64-encode($item)
+};
+
 declare function u:string-to-base64($string as xs:string){
   () (:saxon:string-to-base64Binary($string, "UTF8") :)
 };

@@ -336,15 +336,19 @@ let $http-request := <http:request href="{$href}" method="{$method}">{
            
 let $raw-response :=  u:send-request($http-request)
 
-let $response-headers := for $header in $raw-response//http:header return <c:header name="{$header/@name}" value="{$header/@value}"/>
-
 let $response-body := if ($status-only) then
             ()
          else if ($detailed) then
             <c:body>{$raw-response/*[not(name(.) eq 'http:body')][not(name(.) eq 'http:header')]}</c:body>
          else
-            $raw-response/*[not(name(.) eq 'http:body')][not(name(.) eq 'http:header')]
-      
+            $raw-response[2]
+
+let $response-headers :=  if($raw-response[2] instance of xs:base64Binary)
+    then ()
+    else
+        for $header in $raw-response/http:header
+        return <c:header name="{$header/@name}" value="{$header/@value}"/>
+ 
 return
   if (not($primary/c:request)) then
     u:dynamicError('err:XC0040',"source port must contain c:request element")
@@ -353,14 +357,18 @@ return
       {$response-headers}
       {$response-body}
     </c:response>
-    else if (contains($raw-response//http:header[@name eq 'content-type']/@value,'xml')) then
+    else if($raw-response[2] instance of xs:base64Binary) then
+    <c:body content-type='{$raw-response[1]/http:header[@name eq 'content-type']/@value}' encoding="base64">{$raw-response[2]}</c:body>        
+    else if (contains($raw-response/http:header[@name eq 'content-type']/@value,'html') or contains($raw-response/http:header[@name eq 'content-type']/@value,'xml')) then
         $response-body
     else if (starts-with($raw-response//http:header[@name eq 'content-type']/@value,'text')) then
     <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>
       {$raw-response[2]}
     </c:body>        
   else
-      $response-body
+  <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}' encoding="base64">
+    {u:base64($raw-response[2])}
+  </c:body>
 };
 
 

@@ -202,7 +202,7 @@ declare copy-namespaces preserve, inherit;
  (: ------------------------------------------------------------------------- :)
  declare function parse:explicit-bindings($ast,$portname,$unique_id as xs:string?,$pipeline){
  (: ------------------------------------------------------------------------- :)
- ( $ast/p:declare-step[@type],
+ ( $ast/p:declare-step[@type], 
    for $step at $count in $ast/*[@xproc:step eq 'true']
    return
      if(empty($step)) then
@@ -538,7 +538,7 @@ return
                      $node/@*,
                      u:ns-axis($node),    
                      if ($node/@type) then 
-                       $node/*
+                       ()
                      else
                      element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},

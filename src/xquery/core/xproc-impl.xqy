@@ -189,13 +189,14 @@ let $ast := <p:declare-step>{$currentstep}</p:declare-step>
 let $namespaces := xproc:enum-namespaces($currentstep)
 let $defaultname as xs:string := string($currentstep/@xproc:default-name)
 
-let $xpath-context :=
+let $xpath-context := if ( $currentstep/ext:pre/p:xpath-context/*) then
     xproc:resolve-port-binding(
         $currentstep/ext:pre/p:xpath-context/*,
         (),
         $ast,
         $currentstep)
-
+        else ()
+            
 let $context :=
 if($xpath-context)
     then $xpath-context
@@ -207,10 +208,17 @@ if($xpath-context)
             ()
         )
 
-let $when-test := for $when at $count in $currentstep/p:when
-          let $check-when-test := u:assert(not($when/@test eq ''),"p:choose when test attribute cannot be empty")
+let $when-test := (for $when at $count in $currentstep/p:when
+          let $check-when-test := u:assert(not($when/@test eq ''),"p:choose when test attribute cannot be empty")    
+          let $context := if($when/ext:pre/p:xpath-context/*)
+              then xproc:resolve-port-binding(
+                  $when/ext:pre/p:xpath-context/*,
+                  (),
+                  $ast,
+                  $when)
+              else $context    
           return
-             if ( u:value($context,$when/@test/string(.),$options/*[@name])) then $count else ()
+             if ( $context and u:value($context,$when/@test/string(.),$options/*[@name])) then $count else ())[1]
 return
   if($when-test) then
     let $when-sorted :=  parse:pipeline-step-sort( $currentstep/p:when[$when-test]/node()  , () )
@@ -455,7 +463,7 @@ else if ($input/@href) then
     fn:unparsed-text(concat('file:///',$input/@href))
   else
     (attribute encoding {"base64"},
-    u:string-to-base64(fn:unparsed-text(concat('file:///',$input/@href))))
+    u:base64(fn:unparsed-text(concat('file:///',$input/@href))))
 }</c:data>
 else
 <c:data
@@ -843,7 +851,7 @@ declare function xproc:run(
  }
  let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
  let $eval_result := xproc:evalAST($ast, ($func,$xproc:eval-step-func)[1],$namespaces,$stdin,$bindings,())
- return (output:serialize($eval_result,$dflag), u:stopMap())
+return (output:serialize($eval_result,$dflag), u:stopMap()) 
 };
 
 

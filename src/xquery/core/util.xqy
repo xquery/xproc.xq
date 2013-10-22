@@ -45,7 +45,7 @@ import module namespace http = "http://www.exslt.org/v2/http-client"
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare copy-namespaces preserve, inherit;
+declare copy-namespaces no-preserve, inherit;
 
 declare option xdmp:mapping "false";
 
@@ -267,7 +267,7 @@ fn:boolean($item/binary())
 };
 
 declare function u:base64($item){
-xdmp:base64-encode($item)
+$item
 };
 
 declare function u:string-to-base64($string as xs:string){

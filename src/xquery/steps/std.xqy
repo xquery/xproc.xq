@@ -366,9 +366,7 @@ return
       {$raw-response[2]}
     </c:body>        
   else
-  <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}' encoding="base64">
-    {u:base64($raw-response[2])}
-  </c:body>
+  <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>{$raw-response[2]}</c:body>
 };
 
 

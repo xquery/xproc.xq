@@ -1075,7 +1075,7 @@ declare %test:case function  test:runDeclareStep1() {
   let $outputs  := ()
   let $result   :=  xproc:run($pipeline,$stdin,(),(),(),$dflag,0,$xproc:eval-step-func)
     return
-      assert:equal($result,())
+      assert:equal($result,<c:result xmlns:c="http://www.w3.org/ns/xproc-step">2</c:result>)
 };
 
 

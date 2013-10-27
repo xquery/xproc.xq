@@ -45,7 +45,7 @@ import module namespace http = "http://www.exslt.org/v2/http-client"
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare copy-namespaces preserve, no-inherit;
+declare copy-namespaces no-preserve, inherit;
 
 declare option xdmp:mapping "false";
 
@@ -64,6 +64,13 @@ declare option xdmp:update "true";
 (: -------------------------------------------------------------------------- :)
 (:~ Processor Specific                                                        :)
 (: -------------------------------------------------------------------------- :)
+
+declare function u:quote($data){
+    xdmp:quote($data/*,<options xmlns="xdmp:quote">
+    <indent>no</indent>
+    <omit-xml-declaration>yes</omit-xml-declaration>
+    </options>)
+};
 
 declare function u:quote($data,$method,$indent,$omit-xml-declaration){
     xdmp:quote($data/*,<options xmlns="xdmp:quote">
@@ -291,7 +298,7 @@ return
 (: -------------------------------------------------------------------------- :)
 declare function u:parse($data as xs:string) as item(){
 (: -------------------------------------------------------------------------- :)
-() (: saxon:parse($data) :)
+ u:quote($data) (: saxon:parse($data) :)
 };
 
 

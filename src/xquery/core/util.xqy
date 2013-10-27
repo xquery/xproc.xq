@@ -45,7 +45,7 @@ import module namespace http = "http://www.exslt.org/v2/http-client"
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare copy-namespaces no-preserve, inherit;
+declare copy-namespaces preserve, no-inherit;
 
 declare option xdmp:mapping "false";
 
@@ -176,11 +176,14 @@ declare function u:putInputMap(
     if($values) then
     xdmp:eval('
         import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+        declare namespace xproc = "http://xproc.net/xproc";
 
+        declare copy-namespaces no-preserve, no-inherit;
         declare option xdmp:update "true";
 
         declare variable $values external;
         declare variable $key external;
+
 
         let $uri := "/xproc/" || u:get-episode() || "/" || $key || ".xml"
         return  
@@ -190,7 +193,7 @@ declare function u:putInputMap(
         for $v in $values/*
         return <u:entry id="{$key}">{$v}</u:entry>
         }</u:root>,(),("xproc"))',
-        (fn:QName("","values"),element u:values {$values},
+        (fn:QName("","values"),element values {$values},
          fn:QName("","key"), $key))
     else ()
     }catch($e){ if ($e/error:code eq "XDMP-ARG") then xdmp:log("problem with: " || $key ) else xdmp:rethrow() }
@@ -211,6 +214,9 @@ declare function u:getInputMap(
 {
     xdmp:eval('
         import module namespace u = "http://xproc.net/xproc/util" at "/xquery/core/util.xqy";
+        declare namespace xproc = "http://xproc.net/xproc";
+
+        declare copy-namespaces no-preserve, no-inherit;
 
         declare option xdmp:update "false";
 

@@ -27,6 +27,8 @@ declare namespace p="http://www.w3.org/ns/xproc";
 declare namespace c="http://www.w3.org/ns/xproc-step";
 declare namespace err="http://www.w3.org/ns/xproc-error";
 
+declare copy-namespaces no-preserve, no-inherit;
+
 
  (:~
   : simplified entry point into xproc.xq returning the final serialized output of pipeline processing

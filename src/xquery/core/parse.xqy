@@ -34,7 +34,7 @@ declare namespace opt="http://xproc.net/xproc/opt";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
-declare copy-namespaces preserve, inherit;
+(: declare copy-namespaces no-preserve, no-inherit; :)
 
  (:~
   : looks up std, ext, and opt step definition
@@ -538,9 +538,9 @@ return
                      $node/@*,
                      u:ns-axis($node),    
                      if ($node/@type) then 
-                       ()
+                       $node/*
                      else
-                     element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
+                     (element ext:pre {attribute xproc:default-name {fn:concat($node/@xproc:default-name,'.0')},
                        attribute xproc:step {"true"},
                        attribute xproc:func {"ext:pre#4"},
                        $node/p:input[@port ne 'source'],
@@ -551,6 +551,8 @@ return
                        parse:variables($node/p:variable,$step-definition)
                      },
                      parse:AST($node/*[@xproc:type ne 'comp'])
+                     )
+
                    }
             case element(p:group) 
                    return element p:group {
@@ -652,7 +654,7 @@ return
     namespace xxq-error {"http://xproc.net/xproc/error"},
     attribute xproc:default-name {$const:init_unique_id},
     $pipeline/*[not(@xproc:step)],
-    parse:explicit-name($pipeline/*[@xproc:step eq "true"], $const:init_unique_id)
+    parse:explicit-name($pipeline/*[@xproc:step eq "true"][not(exists(@type))], $const:init_unique_id)
   }
  };
 

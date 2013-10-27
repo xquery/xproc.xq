@@ -52,7 +52,8 @@ declare namespace xsl="http://www.w3.org/1999/XSL/Transform";
 declare namespace err="http://www.w3.org/2005/xqt-errors";
 
 (:declare copy-namespaces preserve, inherit;:)
-declare copy-namespaces no-preserve, no-inherit;
+
+declare copy-namespaces no-preserve, inherit;
 
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
@@ -91,6 +92,39 @@ return xproc:run($pipeline,$primary,$bindings,$options,(),$dflag ,$tflag)
 };
 
 
+(: -------------------------------------------------------------------------- :)
+declare
+function xproc:xproc-runstep($primary,$pipeline) {
+(: -------------------------------------------------------------------------- :)
+
+ let $stdin := $primary
+ let $bindings := ()
+ let $episode := u:episode()
+ let $tflag := 0
+ let $dflag := 0
+ let $start := u:startMap($episode)       
+ let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
+ let $namespaces := xproc:enum-namespaces($pipeline)
+ let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
+ let $preparse:= parse:pipeline-step-sort( $parse ,<p:declare-step/>) 
+    
+ let $ast        := element p:declare-step {$parse/@*,
+   u:ns-axis($parse),  
+   namespace p {"http://www.w3.org/ns/xproc"},
+   namespace xproc {"http://xproc.net/xproc"},
+   namespace ext {"http://xproc.net/xproc/ext"},
+   namespace opt {"http://xproc.net/xproc/opt"},
+   namespace c {"http://www.w3.org/ns/xproc-step"},
+   namespace xprocerr {"http://www.w3.org/ns/xproc-error"},
+   namespace xxq-error {"http://xproc.net/xproc/error"},
+   $preparse/(* except ext:post),$preparse/ext:post
+ }
+
+ let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
+ let $eval_result := xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$stdin,$bindings,())
+ let $result :=  (output:serialize($eval_result,$dflag))
+ return $result
+};
 
 (:~ p:group step implementation
  :
@@ -673,16 +707,35 @@ declare function xproc:noop($a,$b,$c,$d){
  let $stepfunction as function(*):=
      if ($currentstep/@type or $currentstep/@xproc:func eq "")
          then
-         if($ast/p:declare-stype/@xproc:type eq "declare-step")
+         if($ast/p:declare-step/@xproc:type eq "defined")
              then xproc:xproc-run#4
              else std:identity#4
          else function-lookup(
              xs:QName(substring-before($currentstep/@xproc:func,'#')),
                xs:integer(substring-after($currentstep/@xproc:func,'#')))
  return
- if($currentstep/@xproc:func eq "xproc:noop#4")
+     if($currentstep/@xproc:func eq "xproc:noop#4")
      then
         ()
+     else if ($currentstep/@xproc:type eq "defined") then
+         let $namespaces  := xproc:enum-namespaces($currentstep)         
+         let $primary-result   := xproc:eval-primary($ast,$currentstep,$primary, ())
+         let $secondary-result := xproc:eval-secondary($ast,$currentstep,$primary,())
+
+         let $ast-step := $ast/p:declare-step[@type eq name($currentstep)]/*
+        
+         let $ast-run :=  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result"/>
+  <p:count/>
+</p:declare-step>
+           
+         let $result :=
+             xproc:xproc-runstep($primary,$ast-run)
+
+         let $_ := u:putInputMap(
+             $step, ($currentstep/p:output/@port/data(.),"result")[1], $result)
+         return $result
      else
          let $primary-result   := xproc:eval-primary($ast,$currentstep,$primary, ())
          let $secondary-result := xproc:eval-secondary($ast,$currentstep,$primary,())
@@ -690,7 +743,7 @@ declare function xproc:noop($a,$b,$c,$d){
          let $log-port := $currentstep/p:log/@port
          let $result := $stepfunction(
              if ($primary-result)
-                 then $primary-result
+                 then $primary-result                
                  else $primary-result,$secondary-result,$with-options,$currentstep)
          let $_ := u:putInputMap(
              $step, ($currentstep/p:output/@port/data(.),"result")[1], $result)

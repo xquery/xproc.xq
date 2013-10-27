@@ -37,6 +37,7 @@ declare namespace http = "http://www.exslt.org/v2/http-client";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
+
 declare function std:ns-for-xslt($primary,$ns){
 
  ( (namespace {"xproc"} {"http://xproc.net/xproc"},
@@ -362,9 +363,10 @@ return
     else if($raw-response[2] instance of xs:base64Binary) then
     <c:body content-type='{$raw-response[1]/http:header[@name eq 'content-type']/@value}' encoding="base64">{$raw-response[2]}</c:body>        
     else if (starts-with($raw-response//http:header[@name eq 'content-type']/@value,'text')) then
-    <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>
-      {$raw-response[2]}
-    </c:body>        
+        element c:body{
+            attribute content-type {$raw-response//http:header[@name eq 'content-type']/@value},
+            $raw-response[2]
+        }  
   else
   <c:body content-type='{$raw-response//http:header[@name eq 'content-type']/@value}'>{$raw-response[2]}</c:body>
 };

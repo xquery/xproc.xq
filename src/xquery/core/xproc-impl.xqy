@@ -339,6 +339,7 @@ let $result :=
       ,0,1) 
 
 return $result
+
 };
 
 
@@ -707,7 +708,7 @@ declare function xproc:noop($a,$b,$c,$d){
  let $stepfunction as function(*):=
      if ($currentstep/@type or $currentstep/@xproc:func eq "")
          then
-         if($ast/p:declare-step/@xproc:type eq "defined")
+         if($ast/p:declare-step[1]/@xproc:type eq "defined")
              then xproc:xproc-run#4
              else std:identity#4
          else function-lookup(
@@ -851,26 +852,8 @@ declare function xproc:run(
     $tflag as xs:integer
     ) as item()*
 {
- let $episode := u:episode()
- let $start := u:startMap($episode)       
- let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
- let $namespaces := xproc:enum-namespaces($pipeline)
- let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
- let $ast        := element p:declare-step {$parse/@*,
-   u:ns-axis($parse),  
-   namespace p {"http://www.w3.org/ns/xproc"},
-   namespace xproc {"http://xproc.net/xproc"},
-   namespace ext {"http://xproc.net/xproc/ext"},
-   namespace opt {"http://xproc.net/xproc/opt"},
-   namespace c {"http://www.w3.org/ns/xproc-step"},
-   namespace xprocerr {"http://www.w3.org/ns/xproc-error"},
-   namespace xxq-error {"http://xproc.net/xproc/error"},
-   parse:pipeline-step-sort( $parse/*,  element p:declare-step {$parse/@*[name(.) ne 'xproc:default-name'],  attribute xproc:default-name{$const:init_unique_id} } )
- }
- let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
- let $eval_result := xproc:evalAST($ast,$xproc:eval-step-func,$namespaces,$stdin,$bindings,())
- return (output:serialize($eval_result,$dflag),u:stopMap())
-
+ xproc:run($pipeline,$stdin,
+   $bindings,$options,$outputs,$dflag,$tflag,$xproc:eval-step-func)
 };
 
 
@@ -888,10 +871,26 @@ declare function xproc:run(
  let $episode := u:episode()    
  let $start := u:startMap($episode)   
  let $validate   := () (: validation:jing($pipeline,fn:doc($const:xproc-rng-schema)) :)
- let $namespaces := xproc:enum-namespaces($pipeline)
- let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $pipeline ))))
- let $ast        := element p:declare-step {$parse/@*,
+     
+ let $imported-libraries :=  if($pipeline/p:import) then  for $i in $pipeline/p:import
+   let $href:=$i/@href
+   return u:unquote-repair( if(starts-with($href,"http")) then u:http-get($href) else fn:doc($href) )
+       else ()
+ let $namespaces := xproc:enum-namespaces(($pipeline,$imported-libraries))
 
+ let $import :=  element p:declare-step {$pipeline/@*,
+  $imported-libraries/p:library/*,
+   if($pipeline instance of document-node())
+       then $pipeline/*/(* except p:import)
+       else $pipeline/(* except p:import)
+   }
+   
+ let $parse      := parse:explicit-bindings( parse:AST(parse:explicit-name(parse:explicit-type( $import ))))
+     
+ let $ast        := element p:declare-step {$parse/@*,
+   for $n in $namespaces//*:ns
+        return
+        namespace {$n/@prefix}{$n/string(.)},  
    u:ns-axis($parse),  
    namespace p {"http://www.w3.org/ns/xproc"},
    namespace xproc {"http://xproc.net/xproc"},
@@ -902,6 +901,8 @@ declare function xproc:run(
    namespace xxq-error {"http://xproc.net/xproc/error"},
    parse:pipeline-step-sort( $parse/*,  element p:declare-step {$parse/@*[name(.) ne 'xproc:default-name'],  attribute xproc:default-name{$const:init_unique_id} } )
  }
+let $_:= u:log($ast)
+    
  let $checkAST    := u:assert(not(empty($ast/*[@xproc:step])),"pipeline AST has no steps")
  let $eval_result := xproc:evalAST($ast, ($func,$xproc:eval-step-func)[1],$namespaces,$stdin,$bindings,())
 return (output:serialize($eval_result,$dflag), u:stopMap()) 

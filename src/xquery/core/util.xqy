@@ -43,6 +43,8 @@ import module namespace functx = "http://www.functx.com"
 import module namespace http = "http://www.exslt.org/v2/http-client"
   at "http-client.xqy";
 
+(: import schema "xproc-schema" at "/xquery/etc/xproc.xsd"; :)
+
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 
 declare copy-namespaces no-preserve, inherit;
@@ -78,6 +80,13 @@ declare function u:quote($data,$method,$indent,$omit-xml-declaration){
     <indent>{$indent}</indent>
     <omit-xml-declaration>{$omit-xml-declaration}</omit-xml-declaration>
     </options>)
+};
+
+
+declare function u:unquote-repair($data){
+ xdmp:unquote(
+ xdmp:quote($data),"repair-full")   
+
 };
 
 declare function u:unquote($data){

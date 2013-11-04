@@ -523,7 +523,8 @@ return
  declare function parse:AST($pipeline as node()*){
  (: ------------------------------------------------------------------------- :)
     for $node in $pipeline
-    let $step-definition := parse:get-step($node)
+    let $step-definition := ($pipeline//p:declare-step[@type eq name($node)],
+        parse:get-step($node))
     return
         typeswitch($node)
             case text()
@@ -725,6 +726,13 @@ return
                      $node/@value,
                      $node/@select
                      }
+            case element(p:input)
+                   return element p:input {
+                     attribute xproc:type {'comp'},
+                     $node/@*,
+                     u:ns-axis($node),
+                     $node/*
+                     }
             case element(p:inline)
                    return element p:inline {
                      attribute xproc:type {'comp'},
@@ -768,7 +776,7 @@ return
                      if (contains($type,'step') or $type eq 'defined') then attribute xproc:step {fn:true()} else (),
                      attribute xproc:type {$type},
                      attribute xproc:func {$func},
-                     parse:explicit-type($node/node()) ,
+                     parse:explicit-type($node/*) ,
                     if (contains($type,'step')) then
                        for $option in $node/@*[name(.) ne 'name']      (: normalize all step attribute options to be represented as p:with-option elements :)
                        return

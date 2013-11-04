@@ -495,14 +495,8 @@ let $template := <xsl:stylesheet version="{$const:xslt-version}">
     {$const:xslt-output}
     {for $option in $options[@name]
         return
-<xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
-}
-
-<xsl:template match="@*|node()">
-    <xsl:copy>
-        <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
-</xsl:template>
+        <xsl:param name="{$option/@name}" select="{if($option/@select ne'') then string($option/@select) else concat('&quot;',$option/@value,'&quot;')}"/>
+    }
 
 <xsl:template match="{$match}">
   <xsl:copy>
@@ -516,6 +510,10 @@ let $template := <xsl:stylesheet version="{$const:xslt-version}">
     </xsl:choose>
     <xsl:apply-templates/>
   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="attribute()|text()|comment()|processing-instruction()">
+  <xsl:copy/>
 </xsl:template>
 
 </xsl:stylesheet>      

@@ -132,7 +132,7 @@ declare variable $const:default-ns as xs:string:='
     declare namespace ex="http://www.example.org";
     declare namespace tmp="http://www.example.org";
 
-    declare namespace test="http://xproc.org/ns/testsuite";
+(:    declare namespace test="http://xproc.org/ns/testsuite";:)
     declare namespace test2="http://xproc.org/ns/testsuite";
     declare namespace n="http://xproc.org/ns/testsuite";
 

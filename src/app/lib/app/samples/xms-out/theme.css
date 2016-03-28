@@ -1,0 +1,94 @@
+
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro);
+body {
+    margin:0;
+}
+p.spectrum, pre.spectrum {
+
+    margin:0px;
+    font-family:'Source Code Pro', Monaco, Consolas, 'Andale Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 0.8em;
+    white-space: pre-wrap;
+    display: block;
+    border: none thin;
+    border-color: #405075;
+    background-color:#FFFFFF;
+    padding: 2px 2px 2px 5px;
+    margin-bottom:5px;
+
+}
+
+div.spectrum-toc {
+
+    font-family:'Source Code Pro', Monaco, Consolas, 'Andale Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 0.8em;
+    display: block;
+    border: none thin;
+    border-color: #405075;
+    background-color:#FFFFFF;
+    padding: 2px;
+
+}
+
+ul.base1, ul.spectrum-toc {
+color:#1049a9;
+  }
+
+  ul.spectrum-toc > li {
+  border-width:1px;
+  border-top-style: solid;
+  padding-bottom: 8px;
+  }
+  ul.spectrum-toc li {
+  list-style: none;
+  }
+  ul.spectrum-toc span.blue {
+  display:block;
+  margin: 8px 0px 8px 0px;
+  }
+  ul.t-and-f {
+
+  border-color: blue;
+  float: left;
+  }
+  ul.v-and-p {
+
+  border-color: red;
+  float: left;
+  }
+
+  .spectrum span {
+  white-space: pre-wrap;
+  }
+
+  span.ww
+ {background-color: #FFFFFF; }
+ span.base01, span.eq-equ, span.z, span.sc, span.scx, span.ec, span.es, span.ez, span.atneq
+ {color: #006C51; }
+ span.base03, span.ww:not(:hover), span.txt:not(:hover), span.cm:not(:hover), span.pi:not(:hover)
+ {background-color: #FFFFFF; }
+ span.base0, span.txt, span.cd
+ {color: #00685A; }
+ span.base1, span.literal
+ {color: #1049a9; }
+ span.yellow, span.op, span.type-op, span.if, span.higher, span.step, span.whitespace, span.quantifier, span.parenthesis
+ {color: #534ed9; }
+ span.orange, span.function, span.pname
+ {color: #EC0033; }
+ span.red, span.fname, span.tname, span.tcall
+ {color: #a66b00; }
+ span.magenta, span.vname, span.variable, span.external
+ {color: #7608aa; }
+ span.violet, span.qname, span.type-name, span.unclosed, span.en, span.cl, span.href
+ {color: #4c036e; }
+ span.blue, span.enxsl, span.clxsl, span.enx, span.filter, span.node, span.node-type
+ {color: #052c6e; }
+ span.cyan, span.atn, span.numeric, span.pi, span.dt, span.axis, span.context, span.bracedq, span.property
+ {color: #920031; }
+ span.green, span.cm, span.comment, span.av, span.type
+ {color: #8a8a8a; }
+
+
+a.solar {
+    text-decoration:none;
+}

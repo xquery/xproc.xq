@@ -1,0 +1,82 @@
+<tests>
+  <test>
+    <![CDATA[xproc version="2.0";
+
+inputs $source as document-node();
+outputs $result as document-node();
+
+$source => std:identity() >>$result
+
+    ]]>
+  </test>
+  <test>
+    <![CDATA[xproc version="2.0";
+
+inputs $source as document-node();
+outputs $result as document-node();
+
+$source => std:identity() => opt:validate() => r:wg() >>$result
+
+$source => std:identity() >>$result
+
+    ]]>
+  </test>
+  <test>
+    <![CDATA[
+             xproc version = "2.0";
+
+(: This example is from the XProc 1.0 specification (example 3). :)
+
+inputs $source as document-node();
+outputs $result as document-node();
+
+$source => { if (xs:decimal($1/*/@version) < 2.0)
+then [$1,"v1schema.xsd"] => validate-with-xml-schema() >> @1
+else [$1,"v2schema.xsd"] => validate-with-xml-schema() >> @1}
+=> [$1,"stylesheet.xsl"] => xslt()
+>> $result]]>
+  </test>
+  <test>
+    <![CDATA[xproc version="2.0";
+
+inputs $source as document-node();
+outputs $result as document-node();
+
+$source => xslt()
+
+    ]]>
+  </test>
+  <test>
+    <![CDATA[xproc version="2.0";
+
+inputs $source as document-node();
+outputs $result as document-node();
+
+$source => { if ( xs:decimal($1/*/@version) < 2.0)
+then [$1,"v1schema.xsd"] => validate-with-xml-schema() >> @1
+else [$1,"v2schema.xsd"] => validate-with-xml-schema() >> @1}
+=> [$1,"stylesheet.xsl"] => xslt()
+>> $result
+    ]]>
+  </test>
+  <test>
+    <![CDATA[
+             $in => xinclude()
+    ]]>
+  </test>
+  <test>
+    <![CDATA[
+             [$in,"stylesheet.xsl"] => xslt() => [($1,$2),"query.xq"] => xquery()
+    ]]>
+  </test>
+  <test>
+    <![CDATA[
+             $in//section => count() >> $out
+    ]]>
+  </test>
+  <test>
+    <![CDATA[
+             ["document.xml", "style.xsl"] => xslt()
+    ]]>
+  </test>
+</tests>
